@@ -6,13 +6,13 @@ import uuid
 
 from flask import Flask, request, Response
 
-from .compiler import Compiler
-from .config import (JUDGER_WORKSPACE_BASE, SPJ_SRC_DIR, SPJ_EXE_DIR, COMPILER_USER_UID, SPJ_USER_UID,
+from compiler import Compiler
+from config import (JUDGER_WORKSPACE_BASE, SPJ_SRC_DIR, SPJ_EXE_DIR, COMPILER_USER_UID, SPJ_USER_UID,
                      RUN_USER_UID, RUN_GROUP_GID, TEST_CASE_DIR)
-from .exception import TokenVerificationFailed, CompileError, SPJCompileError, JudgeClientError
-from .judge_client import JudgeClient
-from .utils import server_info, logger, token, ProblemIOMode
-from ..config.languages import lang_map
+from exception import TokenVerificationFailed, CompileError, SPJCompileError, JudgeClientError
+from judge_client import JudgeClient
+from utils import server_info, logger, token, ProblemIOMode
+from languages import lang_map
 
 app = Flask(__name__)
 DEBUG = os.environ.get("judger_debug") == "1"
