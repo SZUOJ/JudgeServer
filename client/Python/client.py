@@ -3,7 +3,8 @@ import json
 
 import requests
 
-from .languages import c_lang_config, cpp_lang_config, java_lang_config, c_lang_spj_config, c_lang_spj_compile, py2_lang_config, py3_lang_config, go_lang_config, php_lang_config, js_lang_config
+from config.languages import c_lang_config, cpp_lang_config, java_lang_config, c_lang_spj_config, \
+    c_lang_spj_compile, py2_lang_config, py3_lang_config, go_lang_config
 
 
 class JudgeServerClientError(Exception):
@@ -28,7 +29,8 @@ class JudgeServerClient(object):
     def ping(self):
         return self._request(self.server_base_url + "/ping")
 
-    def judge(self, src, language_config, max_cpu_time, max_memory, test_case_id=None, test_case=None, spj_version=None, spj_config=None,
+    def judge(self, src, language_config, max_cpu_time, max_memory, test_case_id=None, test_case=None, spj_version=None,
+              spj_config=None,
               spj_compile_config=None, spj_src=None, output=False):
         if not (test_case or test_case_id) or (test_case and test_case_id):
             raise ValueError("invalid parameter")
@@ -188,4 +190,5 @@ rl.on('line', (input) => {
     print("c_dynamic_input_judge")
     print(client.judge(src=c_src, language_config=c_lang_config,
                        max_cpu_time=1000, max_memory=1024 * 1024 * 128,
-                       test_case=[{"input": "1 2\n", "output": "3"}, {"input": "1 4\n", "output": "3"}], output=True), "\n\n")
+                       test_case=[{"input": "1 2\n", "output": "3"}, {"input": "1 4\n", "output": "3"}], output=True),
+          "\n\n")

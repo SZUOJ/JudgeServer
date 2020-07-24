@@ -8,9 +8,9 @@ import shlex
 
 import psutil
 
-from config import TEST_CASE_DIR, JUDGER_RUN_LOG_PATH, RUN_GROUP_GID, RUN_USER_UID, SPJ_EXE_DIR, SPJ_USER_UID, SPJ_GROUP_GID, RUN_GROUP_GID
-from exception import JudgeClientError
-from utils import ProblemIOMode
+from .config import TEST_CASE_DIR, JUDGER_RUN_LOG_PATH, RUN_GROUP_GID, RUN_USER_UID, SPJ_EXE_DIR, SPJ_USER_UID, SPJ_GROUP_GID, RUN_GROUP_GID
+from .exception import JudgeClientError
+from .utils import ProblemIOMode
 
 SPJ_WA = 1
 SPJ_AC = 0

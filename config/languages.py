@@ -140,3 +140,12 @@ js_lang_config = {
         "memory_limit_check_only": 1
     }
 }
+
+
+lang_map = {
+    "c": c_lang_config,
+    "cpp": cpp_lang_config,
+    "java": java_lang_config,
+    "py": py3_lang_config,
+    "go": go_lang_config
+}
