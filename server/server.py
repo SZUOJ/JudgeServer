@@ -6,12 +6,13 @@ import uuid
 
 from flask import Flask, request, Response
 
-from compiler import Compiler
-from config import (JUDGER_WORKSPACE_BASE, SPJ_SRC_DIR, SPJ_EXE_DIR, COMPILER_USER_UID, SPJ_USER_UID,
-                    RUN_USER_UID, RUN_GROUP_GID, TEST_CASE_DIR)
-from exception import TokenVerificationFailed, CompileError, SPJCompileError, JudgeClientError
-from judge_client import JudgeClient
-from utils import server_info, logger, token, ProblemIOMode
+from .compiler import Compiler
+from .config import (JUDGER_WORKSPACE_BASE, SPJ_SRC_DIR, SPJ_EXE_DIR, COMPILER_USER_UID, SPJ_USER_UID,
+                     RUN_USER_UID, RUN_GROUP_GID, TEST_CASE_DIR)
+from .exception import TokenVerificationFailed, CompileError, SPJCompileError, JudgeClientError
+from .judge_client import JudgeClient
+from .utils import server_info, logger, token, ProblemIOMode
+from ..config.languages import lang_map
 
 app = Flask(__name__)
 DEBUG = os.environ.get("judger_debug") == "1"
@@ -55,10 +56,29 @@ class JudgeServer:
         data["action"] = "pong"
         return data
 
+    # TODO 接口解耦
     @classmethod
-    def judge(cls, language_config, src, max_cpu_time, max_memory, test_case_id=None, test_case=None,
+    def judge(cls, language, src, max_cpu_time, max_memory, test_case_id=None, test_case=None,
               spj_version=None, spj_config=None, spj_compile_config=None, spj_src=None, output=False,
               io_mode=None):
+        """
+
+        :param language: 语言
+        :param src: 要运行的代码
+        :param max_cpu_time:
+        :param max_memory:
+        :param test_case_id:
+        :param test_case:
+        :param spj_version:
+        :param spj_config:
+        :param spj_compile_config:
+        :param spj_src:
+        :param output:
+        :param io_mode:
+        :return:
+        """
+        language_config = lang_map[language]  # 根据传入的语言决定采用哪一种配置
+
         if not io_mode:
             io_mode = {"io_mode": ProblemIOMode.standard}
 
@@ -80,7 +100,8 @@ class JudgeServer:
                                 spj_compile_config=spj_compile_config)
 
         init_test_case_dir = bool(test_case)
-        with InitSubmissionEnv(JUDGER_WORKSPACE_BASE, submission_id=str(submission_id), init_test_case_dir=init_test_case_dir) as dirs:
+        with InitSubmissionEnv(JUDGER_WORKSPACE_BASE, submission_id=str(submission_id),
+                               init_test_case_dir=init_test_case_dir) as dirs:
             submission_dir, test_case_dir = dirs
             test_case_dir = test_case_dir or os.path.join(TEST_CASE_DIR, test_case_id)
 
