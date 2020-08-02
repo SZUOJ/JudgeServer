@@ -1,17 +1,18 @@
-import _judger
 import hashlib
 import json
 import os
+import re
 import shutil
 from multiprocessing import Pool
 import shlex
 
+import _judger
 import psutil
 
-from config import TEST_CASE_DIR, JUDGER_RUN_LOG_PATH, RUN_GROUP_GID, RUN_USER_UID, SPJ_EXE_DIR, SPJ_USER_UID, SPJ_GROUP_GID, RUN_GROUP_GID
-from exception import JudgeClientError
-from utils import ProblemIOMode
-
+from server.config import JUDGER_RUN_LOG_PATH, RUN_USER_UID, SPJ_EXE_DIR, SPJ_USER_UID, SPJ_GROUP_GID, RUN_GROUP_GID
+from server.exception import JudgeClientError
+from server.utils import ProblemIOMode
+from typing import Tuple, Union
 SPJ_WA = 1
 SPJ_AC = 0
 SPJ_ERROR = -1
@@ -58,12 +59,26 @@ class JudgeClient(object):
     def _get_test_case_file_info(self, test_case_file_id):
         return self._test_case_info["test_cases"][test_case_file_id]
 
-    def _compare_output(self, test_case_file_id, user_output_file):
-        with open(user_output_file, "rb") as f:
-            content = f.read()
-        output_md5 = hashlib.md5(content.rstrip()).hexdigest()
-        result = output_md5 == self._get_test_case_file_info(test_case_file_id)["stripped_output_md5"]
-        return output_md5, result
+    def _compare_output(self, test_case_file_id, user_output_file) -> Tuple[str, int]:
+        """比较输出md5
+
+        :param test_case_file_id:
+        :param user_output_file:
+        :return: md5和答案状态
+        """
+        with open(user_output_file, "r") as f:
+            output_str = f.read()
+        stripped_output = re.sub(pattern=r"\s", repl="", string=output_str)  # 去除所有空字符
+
+        output_md5 = hashlib.md5(bytes(output_str.rstrip())).hexdigest()
+        stripped_output_md5 = hashlib.md5(bytes(stripped_output)).hexdigest()
+
+        if output_md5 == self._get_test_case_file_info(test_case_file_id)["output_md5"]:
+            return output_md5, _judger.RESULT_SUCCESS
+        elif stripped_output_md5 == self._get_test_case_file_info(test_case_file_id)["stripped_output_md5"]:
+            return output_md5, _judger.RESULT_PRESENTATION_ERROR
+        else:
+            return output_md5, _judger.RESULT_WRONG_ANSWER
 
     def _spj(self, in_file_path, user_out_file_path):
         os.chown(self._submission_dir, SPJ_USER_UID, 0)
@@ -162,10 +177,7 @@ class JudgeClient(object):
                         run_result["result"] = _judger.RESULT_SYSTEM_ERROR
                         run_result["error"] = _judger.ERROR_SPJ_ERROR
                 else:
-                    run_result["output_md5"], is_ac = self._compare_output(test_case_file_id, user_output_file)
-                    # -1 == Wrong Answer
-                    if not is_ac:
-                        run_result["result"] = _judger.RESULT_WRONG_ANSWER
+                    run_result["output_md5"], run_result["result"] = self._compare_output(test_case_file_id, user_output_file)
 
         if self._output:
             try:
