@@ -2,8 +2,8 @@ import _judger
 import json
 import os
 
-from config import COMPILER_LOG_PATH, COMPILER_USER_UID, COMPILER_GROUP_GID
-from exception import CompileError
+from server.config import COMPILER_LOG_PATH, COMPILER_USER_UID, COMPILER_GROUP_GID
+from server.exception import CompileError
 
 
 class Compiler(object):
