@@ -9,9 +9,9 @@ import shlex
 import _judger
 import psutil
 
-from server.config import JUDGER_RUN_LOG_PATH, RUN_USER_UID, SPJ_EXE_DIR, SPJ_USER_UID, SPJ_GROUP_GID, RUN_GROUP_GID
-from server.exception import JudgeClientError
-from server.utils import ProblemIOMode
+from config import JUDGER_RUN_LOG_PATH, RUN_USER_UID, SPJ_EXE_DIR, SPJ_USER_UID, SPJ_GROUP_GID, RUN_GROUP_GID
+from exception import JudgeClientError
+from utils import ProblemIOMode
 from typing import Tuple, Union
 SPJ_WA = 1
 SPJ_AC = 0
