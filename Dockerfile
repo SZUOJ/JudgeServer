@@ -19,10 +19,11 @@ RUN buildDeps='software-properties-common git libtool make cmake python-dev pyth
     mkdir build && cd build && cmake .. && make && make install && cd ../bindings/Python && python3 setup.py install && \
     apt-get purge -y --auto-remove $buildDeps && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
-    mkdir -p /server && \
+    mkdir -p /server && export PYTHONPATH=/server && \
     useradd -u 12001 compiler && useradd -u 12002 code && useradd -u 12003 spj && usermod -a -G code spj
-HEALTHCHECK --interval=5s --retries=3 CMD python3 /server/service.py
+
 ADD server /server
+HEALTHCHECK --interval=5s --retries=3 CMD python3 /server/service.py
 WORKDIR /server
 RUN gcc -shared -fPIC -o unbuffer.so unbuffer.c
 EXPOSE 8080
