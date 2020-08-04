@@ -8,11 +8,11 @@ API示例
 ```json
 {
     "language": "py",
-    "src": "import re",
+    "src": "import re\nprint(\"666\")",
     "max_cpu_time": 3000,
     "max_memory": 33554432,
     "test_case_id": "test",
-    "output": "False"
+    "output": false
 }
 ```
 
@@ -24,16 +24,16 @@ result为Judger的判题结果。
     "err": null,
     "data": [
         {
-            "cpu_time": 18,
-            "real_time": 19,
-            "memory": 8769536,
+            "cpu_time": 30,
+            "real_time": 30,
+            "memory": 9691136,
             "signal": 0,
-            "exit_code": 1,
+            "exit_code": 0,
             "error": 0,
-            "result": 4,
+            "result": -1,
             "test_case": "1",
-            "output_md5": null,
-            "output": "Traceback (most recent call last):\n  File \"/judger/run/6c553f72a28b4e7e88b02dadf2d9b352/solution.py\", line 1, in <module>\nModuleNotFoundError: No module named 'r'\n"
+            "output_md5": "fae0b27c451c728867a567e8c1bb4e53",
+            "output": null
         }
     ]
 }
