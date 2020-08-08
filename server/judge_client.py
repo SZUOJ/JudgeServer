@@ -70,8 +70,8 @@ class JudgeClient(object):
             output_str = f.read()
         stripped_output = re.sub(pattern=r"\s", repl="", string=output_str)  # 去除所有空字符
 
-        output_md5 = hashlib.md5(bytes(output_str.rstrip())).hexdigest()
-        stripped_output_md5 = hashlib.md5(bytes(stripped_output)).hexdigest()
+        output_md5 = hashlib.md5(bytes(output_str.rstrip(), encoding="UTF-8")).hexdigest()
+        stripped_output_md5 = hashlib.md5(bytes(stripped_output, encoding="UTF-8")).hexdigest()
 
         if output_md5 == self._get_test_case_file_info(test_case_file_id)["output_md5"]:
             return output_md5, _judger.RESULT_SUCCESS
