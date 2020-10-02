@@ -10,9 +10,9 @@ from utils import server_info, logger, token
 class JudgeService(object):
     def heartbeat(self):
         try:
-            resp = requests.post('http://localhost/ping',
+            resp = requests.post('http://localhost:8080/ping',
                                  headers={"X-JUDGE-SERVER-TOKEN": token,
-                                          "Content-Type": "application/json"}, timeout=5)
+                                          "Content-Type": "application/json"}, timeout=5, json={})
             if resp.status_code == 200:
                 return 0
             return 1
