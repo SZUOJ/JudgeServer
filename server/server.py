@@ -210,16 +210,20 @@ def server(path):
                 data = request.json
             except Exception:
                 data = {}
+            status = 200
             ret = {"err": None, "data": getattr(JudgeServer, path)(**data)}
         except (CompileError, TokenVerificationFailed, SPJCompileError, JudgeClientError) as e:
+            status = 500
             logger.exception(e)
             ret = {"err": e.__class__.__name__, "data": e.message}
         except Exception as e:
+            status = 500
             logger.exception(e)
             ret = {"err": "JudgeClientError", "data": e.__class__.__name__ + " :" + str(e)}
     else:
+        status = 400
         ret = {"err": "InvalidRequest", "data": "404"}
-    return Response(json.dumps(ret), mimetype='application/json')
+    return Response(json.dumps(ret), mimetype='application/json', status=status)
 
 
 if DEBUG:
