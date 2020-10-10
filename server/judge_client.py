@@ -12,9 +12,13 @@ from config import JUDGER_RUN_LOG_PATH, RUN_USER_UID, SPJ_EXE_DIR, SPJ_USER_UID,
 from exception import JudgeClientError
 from utils import ProblemIOMode
 from typing import Tuple, Union
+
 SPJ_WA = 1
 SPJ_AC = 0
 SPJ_ERROR = -1
+
+MAX_READ_BYTES = 1024 * 1024  # 最大读取输出大小 1M
+MAX_TRANSFER_BYTES = 1024  # 最大传输输出大小 1K
 
 
 def _run(instance, test_case_file_id):
@@ -66,7 +70,7 @@ class JudgeClient(object):
         :return: md5和答案状态
         """
         with open(user_output_file, "r") as f:
-            output_str = f.read()
+            output_str = f.read(MAX_READ_BYTES)
         stripped_output = re.sub(pattern=r"\s", repl="", string=output_str)  # 去除所有空字符
 
         output_md5 = hashlib.md5(bytes(output_str.rstrip(), encoding="UTF-8")).hexdigest()
@@ -174,12 +178,13 @@ class JudgeClient(object):
                         run_result["result"] = _judger.RESULT_SYSTEM_ERROR
                         run_result["error"] = _judger.ERROR_SPJ_ERROR
                 else:
-                    run_result["output_md5"], run_result["result"] = self._compare_output(test_case_file_id, user_output_file)
+                    run_result["output_md5"], run_result["result"] = self._compare_output(test_case_file_id,
+                                                                                          user_output_file)
 
         if self._output:
             try:
                 with open(user_output_file, "rb") as f:
-                    run_result["output"] = f.read().decode("utf-8", errors="backslashreplace")
+                    run_result["output"] = f.read(MAX_TRANSFER_BYTES).decode("utf-8", errors="backslashreplace")
             except Exception:
                 pass
 
