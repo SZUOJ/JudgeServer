@@ -19,7 +19,7 @@ SPJ_AC = 0
 SPJ_ERROR = -1
 
 MAX_READ_BYTES = 1024 * 1024  # 最大读取输出大小 1M
-MAX_TRANSFER_BYTES = 1024  # 最大传输输出大小 1K
+MAX_OUTPUT_BYTES = 16 * 1024  # 最大传输输出大小 16K
 
 
 def _run(instance, test_case_file_id):
@@ -187,7 +187,7 @@ class JudgeClient(object):
         if self._output:
             try:
                 with open(user_output_file, "rb") as f:
-                    run_result["output"] = f.read(MAX_TRANSFER_BYTES).decode("utf-8", errors="backslashreplace")
+                    run_result["output"] = f.read(MAX_OUTPUT_BYTES).decode("utf-8", errors="backslashreplace")
             except Exception:
                 pass
 
