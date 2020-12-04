@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+import re
 import shutil
 import uuid
 
@@ -8,7 +9,7 @@ from flask import Flask, request, Response
 
 from compiler import Compiler
 from config import (JUDGER_WORKSPACE_BASE, SPJ_SRC_DIR, SPJ_EXE_DIR, COMPILER_USER_UID, SPJ_USER_UID,
-                     RUN_USER_UID, RUN_GROUP_GID, TEST_CASE_DIR)
+                    RUN_USER_UID, RUN_GROUP_GID, TEST_CASE_DIR)
 from exception import TokenVerificationFailed, CompileError, SPJCompileError, JudgeClientError
 from judge_client import JudgeClient
 from utils import server_info, logger, token, ProblemIOMode
@@ -30,9 +31,9 @@ class InitSubmissionEnv(object):
 
     def __enter__(self):
         try:
-            os.mkdir(self.work_dir)
+            os.makedirs(self.work_dir, exist_ok=True)
             if self.init_test_case_dir:
-                os.mkdir(self.test_case_dir)
+                os.makedirs(self.test_case_dir, exist_ok=True)
             os.chown(self.work_dir, COMPILER_USER_UID, RUN_GROUP_GID)
             os.chmod(self.work_dir, 0o711)
         except Exception as e:
@@ -139,18 +140,21 @@ class JudgeServer:
 
                     input_name = str(index) + ".in"
                     item_info["input_name"] = input_name
-                    input_data = item["input"].encode("utf-8")
+                    input_data: bytes = item["input"].encode("utf-8")
                     item_info["input_size"] = len(input_data)
 
                     with open(os.path.join(test_case_dir, input_name), "wb") as f:
                         f.write(input_data)
                     if not is_spj:
+                        output_data: bytes = item["output"].encode("utf-8")
+                        test_output_lf = output_data.replace(b'\r\n', b'\n')  # CRLF格式化
+                        test_output_stripped = re.sub(pattern=rb'\s', repl=b'', string=test_output_lf)  # 去除所有空白字符
+
                         output_name = str(index) + ".out"
                         item_info["output_name"] = output_name
-                        output_data = item["output"].encode("utf-8")
-                        item_info["output_md5"] = hashlib.md5(output_data).hexdigest()
+                        item_info["output_md5"] = hashlib.md5(output_data.rstrip()).hexdigest()
                         item_info["output_size"] = len(output_data)
-                        item_info["stripped_output_md5"] = hashlib.md5(output_data.rstrip()).hexdigest()
+                        item_info["stripped_output_md5"] = hashlib.md5(test_output_stripped).hexdigest()
 
                         with open(os.path.join(test_case_dir, output_name), "wb") as f:
                             f.write(output_data)
