@@ -1,7 +1,7 @@
 #!/bin/bash
 
 rm -rf /judger/*
-mkdir -p /judger/run /judger/spj
+mkdir -p /judger/run /judger/spj /log
 
 chown compiler:code /judger/run
 chmod 711 /judger/run
