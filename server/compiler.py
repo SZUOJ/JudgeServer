@@ -3,7 +3,7 @@ import json
 import os
 
 from config import COMPILER_LOG_PATH, COMPILER_USER_UID, COMPILER_GROUP_GID
-from exception import CompileError
+from exception import CompileError, CompilerRuntimeError
 
 
 class Compiler(object):
@@ -42,7 +42,7 @@ class Compiler(object):
                     os.remove(compiler_out)
                     if error:
                         raise CompileError(error)
-            raise CompileError("Compiler runtime error, info: %s" % json.dumps(result))
+            raise CompilerRuntimeError("Compiler runtime error, info: %s" % json.dumps(result))
         else:
             os.remove(compiler_out)
             return exe_path

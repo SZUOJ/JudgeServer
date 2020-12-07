@@ -10,7 +10,8 @@ from flask import Flask, request, Response
 from compiler import Compiler
 from config import (JUDGER_WORKSPACE_BASE, SPJ_SRC_DIR, SPJ_EXE_DIR, COMPILER_USER_UID, SPJ_USER_UID,
                     RUN_USER_UID, RUN_GROUP_GID, TEST_CASE_DIR)
-from exception import TokenVerificationFailed, CompileError, SPJCompileError, JudgeClientError
+from exception import CompilerRuntimeError, TokenVerificationFailed, CompileError, \
+    SPJCompileError, JudgeClientError
 from judge_client import JudgeClient
 from utils import server_info, logger, token, ProblemIOMode
 from languages import lang_map
@@ -216,8 +217,8 @@ def server(path):
                 data = {}
             status = 200
             ret = {"err": None, "data": getattr(JudgeServer, path)(**data)}
-        except (CompileError, TokenVerificationFailed, SPJCompileError, JudgeClientError) as e:
-            status = 500
+        except (CompileError, CompilerRuntimeError, TokenVerificationFailed, SPJCompileError, JudgeClientError) as e:
+            status = e.status
             logger.exception(e)
             ret = {"err": e.__class__.__name__, "data": e.message}
         except Exception as e:
