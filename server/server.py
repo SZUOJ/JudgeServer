@@ -58,7 +58,6 @@ class JudgeServer:
         data["action"] = "pong"
         return data
 
-    # TODO 接口解耦
     @classmethod
     def judge(cls, language, src, max_cpu_time, max_memory, test_case_id=None, test_case=None,
               spj_version=None, spj_config=None, spj_compile_config=None, spj_src=None, output=False,
