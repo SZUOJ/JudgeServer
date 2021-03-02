@@ -22,3 +22,6 @@ SPJ_GROUP_GID = grp.getgrnam("spj").gr_gid
 TEST_CASE_DIR = "/test_case"
 SPJ_SRC_DIR = "/judger/spj"
 SPJ_EXE_DIR = "/judger/spj"
+
+MAX_READ_BYTES = 64 * 1024 * 1024  # 最大读取输出大小 64M
+MAX_OUTPUT_BYTES = 16 * 1024  # 最大传输输出大小 16K

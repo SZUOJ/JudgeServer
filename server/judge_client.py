@@ -9,7 +9,9 @@ import shlex
 import _judger
 import psutil
 
-from config import JUDGER_RUN_LOG_PATH, RUN_USER_UID, SPJ_EXE_DIR, SPJ_USER_UID, SPJ_GROUP_GID, RUN_GROUP_GID
+from config import JUDGER_RUN_LOG_PATH, MAX_OUTPUT_BYTES, MAX_READ_BYTES, RUN_USER_UID, SPJ_EXE_DIR, SPJ_USER_UID, \
+    SPJ_GROUP_GID, \
+    RUN_GROUP_GID
 from exception import JudgeClientError
 from utils import ProblemIOMode
 from typing import Tuple, Union
@@ -18,8 +20,7 @@ SPJ_WA = 1
 SPJ_AC = 0
 SPJ_ERROR = -1
 
-MAX_READ_BYTES = 64 * 1024 * 1024  # 最大读取输出大小 64M
-MAX_OUTPUT_BYTES = 16 * 1024  # 最大传输输出大小 16K
+
 
 
 def _run(instance, test_case_file_id):
