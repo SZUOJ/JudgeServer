@@ -42,6 +42,6 @@ result为Judger的判题结果。
 # 判题机参数
 
 ```
-MAX_READ_BYTES = 1024 * 1024  # 最大读取输出大小 1M
+MAX_READ_BYTES = 64 * 1024 * 1024  # 最大读取输出大小 64M
 MAX_TRANSFER_BYTES = 1024  # 最大传输输出大小 1K
 ```
