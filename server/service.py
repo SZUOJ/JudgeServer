@@ -16,37 +16,26 @@ class JudgeService:
         if data is None:
             data = {}
         try:
-            resp = requests.post(url, json=data,
+            return requests.post(url,
+                                 json=data,
                                  headers={"X-JUDGE-SERVER-TOKEN": token,
-                                          "Content-Type": "application/json"}, timeout=5).text
+                                          "Content-Type": "application/json"}, timeout=5)
         except Exception as exc:
             logger.exception(exc)
             raise JudgeServiceError("Heartbeat request failed")
-        try:
-            r = json.loads(resp)
-            if r["error"]:
-                raise JudgeServiceError(r["data"])
-        except Exception as exc:
-            logger.exception("Heartbeat failed, response is {}".format(resp))
-            raise JudgeServiceError("Invalid heartbeat response")
 
     def heartbeat(self):
-        self.heartbeat_backend()
         try:
-            self._request(url='http://localhost:8080/ping')
+            info = self._request(url="http://localhost:8080/ping").json()["data"]
+            info["action"] = "heartbeat"
+            info["service_url"] = self.service_url
+            try:
+                self._request(url=self.backend_url, data=info)
+            except Exception as exc:
+                logger.exception(exc)
             return 0
         except Exception as e:
             return 1
-
-    def heartbeat_backend(self):
-        """发送心跳包到后端"""
-        data = server_info()
-        data["action"] = "heartbeat"
-        data["service_url"] = self.service_url
-        try:
-            self._request(url=self.backend_url, data=data)
-        except Exception as exc:
-            logger.exception(exc)
 
 
 if __name__ == "__main__":
