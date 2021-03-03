@@ -205,7 +205,7 @@ class JudgeServer:
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>', methods=["POST"])
 def server(path):
-    if path in ("judge", "ping", "compile_spj"):
+    if path in {"judge", "ping", "compile_spj"}:
         _token = request.headers.get("X-Judge-Server-Token")
         try:
             if _token != token:
