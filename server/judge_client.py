@@ -14,13 +14,11 @@ from config import JUDGER_RUN_LOG_PATH, MAX_OUTPUT_BYTES, MAX_READ_BYTES, RUN_US
     RUN_GROUP_GID
 from exception import JudgeClientError
 from utils import ProblemIOMode
-from typing import Tuple, Union
+from typing import Tuple
 
 SPJ_WA = 1
 SPJ_AC = 0
 SPJ_ERROR = -1
-
-
 
 
 def _run(instance, test_case_file_id):
@@ -71,16 +69,18 @@ class JudgeClient(object):
         :param user_output_file:
         :return: md5和答案状态
         """
-        with open(user_output_file, "r") as f:
+        with open(user_output_file, "rb") as f:
             output_str = f.read(MAX_READ_BYTES)
-        stripped_output = re.sub(pattern=r"\s", repl="", string=output_str)  # 去除所有空字符
+        stripped_output = re.sub(pattern=rb"\s", repl=b"", string=output_str)  # 去除所有空字符
 
-        output_md5 = hashlib.md5(bytes(output_str.rstrip(), encoding="UTF-8")).hexdigest()
-        stripped_output_md5 = hashlib.md5(bytes(stripped_output, encoding="UTF-8")).hexdigest()
+        output_md5 = hashlib.md5(output_str.rstrip()).hexdigest()
+        stripped_output_md5 = hashlib.md5(stripped_output).hexdigest()
 
-        if output_md5 == self._get_test_case_file_info(test_case_file_id)["output_md5"]:
+        test_case_file_info = self._get_test_case_file_info(test_case_file_id)
+
+        if output_md5 == test_case_file_info["output_md5"]:
             return output_md5, _judger.RESULT_SUCCESS
-        elif stripped_output_md5 == self._get_test_case_file_info(test_case_file_id)["stripped_output_md5"]:
+        elif stripped_output_md5 == test_case_file_info["stripped_output_md5"]:
             return output_md5, _judger.RESULT_PRESENTATION_ERROR
         else:
             return output_md5, _judger.RESULT_WRONG_ANSWER
