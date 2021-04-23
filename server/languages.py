@@ -5,7 +5,6 @@ from utils import ProblemIOMode
 
 default_env = ["LANG=en_US.UTF-8", "LANGUAGE=en_US:en", "LC_ALL=en_US.UTF-8"]
 
-
 c_lang_config = {
     "compile": {
         "src_name": "main.c",
@@ -18,6 +17,25 @@ c_lang_config = {
     "run": {
         "command": "{exe_path}",
         "seccomp_rule": {ProblemIOMode.standard: "c_cpp", ProblemIOMode.file: "c_cpp_file_io"},
+        "env": default_env
+    }
+}
+
+# 降低编译优化等级，增加运行时越界检查
+c_lang_address_sanitizer_config = {
+    "compile": {
+        "src_name": "main.c",
+        "exe_name": "main",
+        "max_cpu_time": 3000,
+        "max_real_time": 10000,
+        "max_memory": 256 * 1024 * 1024,
+        "compile_command": "/usr/bin/gcc -DONLINE_JUDGE -w -fsanitize=address -fmax-errors=3 -std=c11 {src_path} "
+                           "-lm -o {exe_path}",
+    },
+    "run": {
+        "command": "{exe_path}",
+        "memory_limit_check_only": 1,  # 限制最大内存可能造成错误
+        "seccomp_rule": "c_cpp_asan",  # c_cpp规则（白名单）限制系统调用导致sanitizer无法运行，暂时放宽到c_cpp_asan（黑名单）
         "env": default_env
     }
 }
@@ -49,6 +67,25 @@ cpp_lang_config = {
     "run": {
         "command": "{exe_path}",
         "seccomp_rule": {ProblemIOMode.standard: "c_cpp", ProblemIOMode.file: "c_cpp_file_io"},
+        "env": default_env
+    }
+}
+
+# 降低编译优化等级，增加运行时越界检查
+cpp_lang_address_sanitizer_config = {
+    "compile": {
+        "src_name": "main.cpp",
+        "exe_name": "main",
+        "max_cpu_time": 10000,
+        "max_real_time": 20000,
+        "max_memory": 1024 * 1024 * 1024,
+        "compile_command": "/usr/bin/g++ -DONLINE_JUDGE -w -fsanitize=address -fmax-errors=3 -std=c++14 {src_path} "
+                           "-lm -o {exe_path}",
+    },
+    "run": {
+        "command": "{exe_path}",
+        "memory_limit_check_only": 1,  # 限制最大内存可能造成错误
+        "seccomp_rule": "c_cpp_asan",  # c_cpp规则（白名单）限制系统调用导致sanitizer无法运行，暂时放宽到c_cpp_asan（黑名单）
         "env": default_env
     }
 }
@@ -86,7 +123,6 @@ java_lang_config = {
         "memory_limit_check_only": 1
     }
 }
-
 
 py2_lang_config = {
     "compile": {
@@ -141,7 +177,9 @@ go_lang_config = {
 
 lang_map = {
     "c": c_lang_config,
+    "c_asan": c_lang_address_sanitizer_config,
     "cpp": cpp_lang_config,
+    "cpp_asan": cpp_lang_address_sanitizer_config,
     "java": java_lang_config,
     "py": py3_lang_config,
     "go": go_lang_config
