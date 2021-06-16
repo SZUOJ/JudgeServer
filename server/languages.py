@@ -29,8 +29,9 @@ c_lang_address_sanitizer_config = {
         "max_cpu_time": 3000,
         "max_real_time": 10000,
         "max_memory": 256 * 1024 * 1024,
-        "compile_command": "/usr/bin/gcc -DONLINE_JUDGE -w -fsanitize=address -fmax-errors=3 -std=c11 {src_path} "
-                           "-lm -o {exe_path}",
+        "compile_command":  # "export ASAN_OPTIONS=detect_leaks=0 && "  # 不启用LeakSanitizer
+            "/usr/bin/gcc -DONLINE_JUDGE -O1 -w -fsanitize=address -fno-omit-frame-pointer "
+            "-fmax-errors=3 -std=c11 {src_path} -lm -o {exe_path}",
     },
     "run": {
         "command": "{exe_path}",
@@ -79,8 +80,9 @@ cpp_lang_address_sanitizer_config = {
         "max_cpu_time": 10000,
         "max_real_time": 20000,
         "max_memory": 1024 * 1024 * 1024,
-        "compile_command": "/usr/bin/g++ -DONLINE_JUDGE -w -fsanitize=address -fmax-errors=3 -std=c++14 {src_path} "
-                           "-lm -o {exe_path}",
+        "compile_command":  # "export ASAN_OPTIONS=detect_leaks=0 && "  # 不启用LeakSanitizer
+            "/usr/bin/g++ -DONLINE_JUDGE -O1 -w -fsanitize=address  -fno-omit-frame-pointer "
+            "-fmax-errors=3 -std=c++14 {src_path} -lm -o {exe_path}",
     },
     "run": {
         "command": "{exe_path}",
@@ -124,26 +126,10 @@ java_lang_config = {
     }
 }
 
-py2_lang_config = {
-    "compile": {
-        "src_name": "solution.py",
-        "exe_name": "solution.pyc",
-        "max_cpu_time": 3000,
-        "max_real_time": 10000,
-        "max_memory": 128 * 1024 * 1024,
-        "compile_command": "/usr/bin/python -m py_compile {src_path}",
-    },
-    "run": {
-        "command": "/usr/bin/python {exe_path}",
-        "seccomp_rule": "general",
-        "env": default_env
-    }
-}
-
 py3_lang_config = {
     "compile": {
         "src_name": "solution.py",
-        "exe_name": "__pycache__/solution.cpython-36.pyc",
+        "exe_name": "__pycache__/solution.cpython-38.pyc",
         "max_cpu_time": 3000,
         "max_real_time": 10000,
         "max_memory": 128 * 1024 * 1024,
