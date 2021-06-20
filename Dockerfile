@@ -11,12 +11,16 @@ RUN export DEBIAN_FRONTEND="noninteractive" && \
     mkdir build && cd build && cmake .. && make && make install && cd ../bindings/Python && python3 setup.py install && \
     apt-get purge -y --auto-remove $buildDeps && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
-    mkdir -p /server && export PYTHONPATH=/server && \
+    export ASAN_OPTIONS=detect_leaks=0 && \
     useradd -u 12001 compiler && useradd -u 12002 code && useradd -u 12003 spj && usermod -a -G code spj
 
 ADD server /server
+
 HEALTHCHECK --interval=5s --retries=3 CMD python3 /server/service.py
+
 WORKDIR /server
-RUN gcc -shared -fPIC -o unbuffer.so unbuffer.c
+
+RUN gcc -shared -fPIC -o unbuffer.so unbuffer.c && chmod +x /server/entrypoint.sh
+
 EXPOSE 8080
 ENTRYPOINT /server/entrypoint.sh
