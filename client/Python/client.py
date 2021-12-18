@@ -118,6 +118,20 @@ func main() {
     fmt.Printf("%d", a + b)
 }"""
 
+    php_src = """<?php
+fscanf(STDIN, "%d %d", $a, $b);
+print($a + $b);"""
+
+    js_src = """const readline = require('readline');
+const rl = readline.createInterface({ input: process.stdin });
+rl.on('line', (input) => {
+  if (input === '') {
+    return rl.close();
+  }
+  const [a, b] = input.split(' ').map(Number)
+  console.log(a + b);
+});"""
+
     client = JudgeServerClient(token=token, server_base_url="http://127.0.0.1:12358")
     print("ping")
     print(client.ping(), "\n\n")
@@ -160,6 +174,16 @@ func main() {
 
     print("go_judge")
     print(client.judge(src=go_src, language_config=go_lang_config,
+                       max_cpu_time=1000, max_memory=128 * 1024 * 1024,
+                       test_case_id="normal", output=True), "\n\n")
+
+    print("php_judge")
+    print(client.judge(src=php_src, language_config=php_lang_config,
+                       max_cpu_time=1000, max_memory=128 * 1024 * 1024,
+                       test_case_id="normal", output=True), "\n\n")
+
+    print("js_judge")
+    print(client.judge(src=js_src, language_config=js_lang_config,
                        max_cpu_time=1000, max_memory=128 * 1024 * 1024,
                        test_case_id="normal", output=True), "\n\n")
 
