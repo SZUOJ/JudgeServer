@@ -5,8 +5,7 @@ COPY build/java_policy /etc
 
 # Judger Server 版本
 ARG OJ_JUDGER_VERSION
-# 不启用内存泄漏检测
-ENV ASAN_OPTIONS detect_leaks=0
+
 ENV DEBIAN_FRONTEND=noninteractive
 ENV OJ_JUDGER_VERSION=${OJ_JUDGER_VERSION}
 
