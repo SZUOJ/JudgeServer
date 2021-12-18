@@ -10,6 +10,7 @@ ENV ASAN_OPTIONS detect_leaks=0
 ENV DEBIAN_FRONTEND=noninteractive
 ENV OJ_JUDGER_VERSION=${OJ_JUDGER_VERSION}
 
+COPY requirements.txt .
 
 RUN buildDeps='software-properties-common git libtool make cmake python-dev python3-pip python-pip libseccomp-dev curl' && \
     apt update && apt install -y python python3 python-pkg-resources python3-pkg-resources $buildDeps && \
@@ -22,7 +23,7 @@ RUN buildDeps='software-properties-common git libtool make cmake python-dev pyth
     update-alternatives --install  /usr/bin/g++ g++ /usr/bin/g++-9 40 && \
     phpJitOption='opcache.enable=1\nopcache.enable_cli=1\nopcache.jit=1205\nopcache.jit_buffer_size=64M' && \
     echo $phpJitOption > /etc/php/8.0/cli/conf.d/10-opcache-jit.ini && \
-    pip3 install -i -I --no-cache-dir psutil gunicorn flask requests idna && \
+    pip3 install --no-cache-dir -r requirements.txt && \
     cd /tmp && git clone -b newnew --depth 1 https://github.com/SZUOJ/Judger && cd Judger && \
     mkdir build && cd build && cmake .. && make && make install && cd ../bindings/Python && python3 setup.py install && \
     apt purge -y --auto-remove $buildDeps && \
