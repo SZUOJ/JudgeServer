@@ -3,9 +3,13 @@ FROM ubuntu:18.04
 COPY build/java_policy /etc
 #RUN sed -E -i -e 's/(archive|ports).ubuntu.com/mirrors.aliyun.com/g' -e '/security.ubuntu.com/d' /etc/apt/sources.list
 
+# Judger Server 版本
+ARG OJ_JUDGER_VERSION
 # 不启用内存泄漏检测
 ENV ASAN_OPTIONS detect_leaks=0
 ENV DEBIAN_FRONTEND=noninteractive
+ENV OJ_JUDGER_VERSION=${OJ_JUDGER_VERSION}
+
 
 RUN buildDeps='software-properties-common git libtool make cmake python-dev python3-pip python-pip libseccomp-dev curl' && \
     apt update && apt install -y python python3 python-pkg-resources python3-pkg-resources $buildDeps && \
