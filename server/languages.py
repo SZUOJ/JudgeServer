@@ -1,7 +1,11 @@
 # coding=utf-8
 from __future__ import unicode_literals
 
+import platform
+
 from utils import ProblemIOMode
+
+py_version = ''.join(platform.python_version().split('.')[:2])
 
 default_env = ["LANG=en_US.UTF-8", "LANGUAGE=en_US:en", "LC_ALL=en_US.UTF-8"]
 
@@ -83,7 +87,7 @@ cpp_lang_address_sanitizer_config = {
                            "-fmax-errors=3 -std=c++14 {src_path} -lm -o {exe_path}",
     },
     "run": {
-        "command": "ASAN_OPTIONS=detect_leaks=0 {exe_path}", # 关闭内存泄漏检测
+        "command": "ASAN_OPTIONS=detect_leaks=0 {exe_path}",  # 关闭内存泄漏检测
         "memory_limit_check_only": 1,  # 限制最大内存可能造成错误
         "seccomp_rule": "c_cpp_asan",  # c_cpp规则（白名单）限制系统调用导致sanitizer无法运行，暂时放宽到c_cpp_asan（黑名单）
         "env": default_env
@@ -127,7 +131,7 @@ java_lang_config = {
 py3_lang_config = {
     "compile": {
         "src_name": "solution.py",
-        "exe_name": "__pycache__/solution.cpython-38.pyc",
+        "exe_name": f"__pycache__/solution.cpython-{py_version}.pyc",
         "max_cpu_time": 3000,
         "max_real_time": 10000,
         "max_memory": 128 * 1024 * 1024,
