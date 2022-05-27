@@ -37,10 +37,10 @@ c_lang_address_sanitizer_config = {
                            "-fmax-errors=3 -std=c11 {src_path} -lm -o {exe_path}",
     },
     "run": {
-        "command": "ASAN_OPTIONS=detect_leaks=0 {exe_path}",  # 关闭内存泄漏检测
+        "command": "{exe_path}",  # 关闭内存泄漏检测
         "memory_limit_check_only": 1,  # 限制最大内存可能造成错误
         "seccomp_rule": "c_cpp_asan",  # c_cpp规则（白名单）限制系统调用导致sanitizer无法运行，暂时放宽到c_cpp_asan（黑名单）
-        "env": default_env
+        "env": default_env + ["ASAN_OPTIONS=detect_leaks=0"]
     }
 }
 
@@ -87,10 +87,10 @@ cpp_lang_address_sanitizer_config = {
                            "-fmax-errors=3 -std=c++14 {src_path} -lm -o {exe_path}",
     },
     "run": {
-        "command": "ASAN_OPTIONS=detect_leaks=0 {exe_path}",  # 关闭内存泄漏检测
+        "command": "{exe_path}",
         "memory_limit_check_only": 1,  # 限制最大内存可能造成错误
         "seccomp_rule": "c_cpp_asan",  # c_cpp规则（白名单）限制系统调用导致sanitizer无法运行，暂时放宽到c_cpp_asan（黑名单）
-        "env": default_env
+        "env": default_env + ["ASAN_OPTIONS=detect_leaks=0"]  # 关闭内存泄漏检测
     }
 }
 
