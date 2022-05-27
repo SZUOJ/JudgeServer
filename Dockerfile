@@ -14,13 +14,13 @@ ENV OJ_JUDGER_VERSION=${OJ_JUDGER_VERSION}
 COPY requirements.txt .
 
 # php 目录需跟进版本
-RUN buildDeps='software-properties-common git libtool make cmake python3-dev python3-pip libseccomp-dev curl' && \
-    apt-get update && apt-get install -y python3 python-pkg-resources python3-pkg-resources $buildDeps && \
+RUN buildDeps='software-properties-common git libtool make cmake python3-dev python3-pip libseccomp-dev gpg-agent' && \
+    apt-get update && apt-get install -y --no-install-recommends python3 python-pkg-resources python3-pkg-resources $buildDeps && \
     add-apt-repository ppa:openjdk-r/ppa && add-apt-repository ppa:longsleep/golang-backports && \
     add-apt-repository ppa:ubuntu-toolchain-r/test && \
     add-apt-repository ppa:ondrej/php && \
     curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
-    apt-get update && apt-get install -y golang-go openjdk-11-jdk php-cli nodejs gcc-11 g++-11 && \
+    apt-get update && apt-get install -y --no-install-recommends golang-go openjdk-11-jdk php-cli nodejs gcc-11 g++-11 && \
     update-alternatives --install  /usr/bin/gcc gcc /usr/bin/gcc-11 40 && \
     update-alternatives --install  /usr/bin/g++ g++ /usr/bin/g++-11 40 && \
     pip3 install --no-cache-dir -r requirements.txt && \
