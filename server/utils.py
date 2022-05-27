@@ -1,16 +1,16 @@
-import _judger
 import hashlib
-import logging
+import logging.handlers
 import os
 import socket
 
+import _judger
 import psutil
 
 from config import SERVER_LOG_PATH
 from exception import JudgeClientError
 
 logger = logging.getLogger(__name__)
-handler = logging.FileHandler(SERVER_LOG_PATH)
+handler = logging.handlers.RotatingFileHandler(SERVER_LOG_PATH, maxBytes=10 * 1024 * 1024, backupCount=5)
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
@@ -28,10 +28,9 @@ def server_info():
 
 def get_token():
     token = os.environ.get("TOKEN")
-    if token:
-        return token
-    else:
+    if not token:
         raise JudgeClientError("env 'TOKEN' not found")
+    return token
 
 
 class ProblemIOMode:
