@@ -3,7 +3,7 @@ import logging.handlers
 import os
 import socket
 
-import _judger
+import judger
 import psutil
 
 from config import SERVER_LOG_PATH
@@ -18,7 +18,7 @@ logger.setLevel(logging.WARNING)
 
 
 def server_info():
-    ver = _judger.VERSION
+    ver = judger.VERSION
     return {"hostname": socket.gethostname(),
             "cpu": psutil.cpu_percent(),
             "cpu_core": psutil.cpu_count(),

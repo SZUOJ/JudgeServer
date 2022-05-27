@@ -1,4 +1,4 @@
-import _judger
+import judger
 import json
 import os
 
@@ -18,12 +18,12 @@ class Compiler(object):
         os.chdir(output_dir)
         env = compile_config.get("env", [])
         env.append("PATH=" + os.getenv("PATH"))
-        result = _judger.run(max_cpu_time=compile_config["max_cpu_time"],
+        result = judger.run(max_cpu_time=compile_config["max_cpu_time"],
                              max_real_time=compile_config["max_real_time"],
                              max_memory=compile_config["max_memory"],
                              max_stack=128 * 1024 * 1024,
                              max_output_size=20 * 1024 * 1024,
-                             max_process_number=_judger.UNLIMITED,
+                             max_process_number=judger.UNLIMITED,
                              exe_path=_command[0],
                              # /dev/null is best, but in some system, this will call ioctl system call
                              input_path=src_path,
@@ -36,7 +36,7 @@ class Compiler(object):
                              uid=COMPILER_USER_UID,
                              gid=COMPILER_GROUP_GID)
 
-        if result["result"] != _judger.RESULT_SUCCESS:
+        if result["result"] != judger.RESULT_SUCCESS:
             if os.path.exists(compiler_out):
                 with open(compiler_out, encoding="utf-8") as f:
                     error = f.read().strip()

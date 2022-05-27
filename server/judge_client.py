@@ -6,7 +6,7 @@ import shutil
 from multiprocessing import Pool
 import shlex
 
-import _judger
+import judger
 import psutil
 
 from config import JUDGER_RUN_LOG_PATH, MAX_OUTPUT_BYTES, MAX_READ_BYTES, RUN_USER_UID, SPJ_EXE_DIR, SPJ_USER_UID, \
@@ -79,11 +79,11 @@ class JudgeClient(object):
         test_case_file_info = self._get_test_case_file_info(test_case_file_id)
 
         if output_md5 == test_case_file_info["output_md5"]:
-            return output_md5, _judger.RESULT_SUCCESS
+            return output_md5, judger.RESULT_SUCCESS
         elif stripped_output_md5 == test_case_file_info["stripped_output_md5"]:
-            return output_md5, _judger.RESULT_PRESENTATION_ERROR
+            return output_md5, judger.RESULT_PRESENTATION_ERROR
         else:
-            return output_md5, _judger.RESULT_WRONG_ANSWER
+            return output_md5, judger.RESULT_WRONG_ANSWER
 
     def _spj(self, in_file_path, user_out_file_path):
         os.chown(self._submission_dir, SPJ_USER_UID, 0)
@@ -94,12 +94,12 @@ class JudgeClient(object):
                                                      user_out_file_path=user_out_file_path)
         command = shlex.split(command)
         seccomp_rule_name = self._spj_config["seccomp_rule"]
-        result = _judger.run(max_cpu_time=self._max_cpu_time * 3,
+        result = judger.run(max_cpu_time=self._max_cpu_time * 3,
                              max_real_time=self._max_cpu_time * 9,
                              max_memory=self._max_memory * 3,
                              max_stack=128 * 1024 * 1024,
                              max_output_size=1024 * 1024 * 1024,
-                             max_process_number=_judger.UNLIMITED,
+                             max_process_number=judger.UNLIMITED,
                              exe_path=command[0],
                              input_path=in_file_path,
                              output_path="/tmp/spj.out",
@@ -111,8 +111,8 @@ class JudgeClient(object):
                              uid=SPJ_USER_UID,
                              gid=SPJ_GROUP_GID)
 
-        if result["result"] == _judger.RESULT_SUCCESS or \
-                (result["result"] == _judger.RESULT_RUNTIME_ERROR and
+        if result["result"] == judger.RESULT_SUCCESS or \
+                (result["result"] == judger.RESULT_RUNTIME_ERROR and
                  result["exit_code"] in [SPJ_WA, SPJ_ERROR] and result["signal"] == 0):
             return result["exit_code"]
         else:
@@ -146,12 +146,12 @@ class JudgeClient(object):
         if isinstance(seccomp_rule, dict):
             seccomp_rule = seccomp_rule[self._io_mode["io_mode"]]
 
-        run_result = _judger.run(max_cpu_time=self._max_cpu_time,
+        run_result = judger.run(max_cpu_time=self._max_cpu_time,
                                  max_real_time=self._max_real_time,
                                  max_memory=self._max_memory,
                                  max_stack=128 * 1024 * 1024,
                                  max_output_size=max(test_case_info.get("output_size", 0) * 2, 1024 * 1024 * 16),
-                                 max_process_number=_judger.UNLIMITED,
+                                 max_process_number=judger.UNLIMITED,
                                  exe_path=command[0],
                                  args=command[1::],
                                  env=env,
@@ -166,9 +166,9 @@ class JudgeClient(object):
         # if progress exited normally, then we should check output result
         run_result["output_md5"] = None
         run_result["output"] = None
-        if run_result["result"] == _judger.RESULT_SUCCESS:
+        if run_result["result"] == judger.RESULT_SUCCESS:
             if not os.path.exists(user_output_file):
-                run_result["result"] = _judger.RESULT_WRONG_ANSWER
+                run_result["result"] = judger.RESULT_WRONG_ANSWER
             else:
                 if self._test_case_info.get("spj"):
                     if not self._spj_config or not self._spj_version:
@@ -177,10 +177,10 @@ class JudgeClient(object):
                     spj_result = self._spj(in_file_path=in_file, user_out_file_path=user_output_file)
 
                     if spj_result == SPJ_WA:
-                        run_result["result"] = _judger.RESULT_WRONG_ANSWER
+                        run_result["result"] = judger.RESULT_WRONG_ANSWER
                     elif spj_result == SPJ_ERROR:
-                        run_result["result"] = _judger.RESULT_SYSTEM_ERROR
-                        run_result["error"] = _judger.ERROR_SPJ_ERROR
+                        run_result["result"] = judger.RESULT_SYSTEM_ERROR
+                        run_result["error"] = judger.ERROR_SPJ_ERROR
                 else:
                     run_result["output_md5"], run_result["result"] = self._compare_output(test_case_file_id,
                                                                                           user_output_file)
