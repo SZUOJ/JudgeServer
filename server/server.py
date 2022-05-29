@@ -4,17 +4,17 @@ import os
 import re
 import shutil
 import uuid
+from typing import Optional
 
-from flask import Flask, request, Response
+from flask import Flask, Response, request
 
 from compiler import Compiler
-from config import (JUDGER_WORKSPACE_BASE, SPJ_SRC_DIR, SPJ_EXE_DIR, COMPILER_USER_UID, SPJ_USER_UID,
-                    RUN_USER_UID, RUN_GROUP_GID, TEST_CASE_DIR)
-from exception import CompilerRuntimeError, TokenVerificationFailed, CompileError, \
-    SPJCompileError, JudgeClientError
+from config import (COMPILER_USER_UID, JUDGER_WORKSPACE_BASE, RUN_GROUP_GID, RUN_USER_UID, SPJ_EXE_DIR, SPJ_SRC_DIR,
+                    SPJ_USER_UID, TEST_CASE_DIR)
+from exception import CompileError, CompilerRuntimeError, JudgeClientError, SPJCompileError, TokenVerificationFailed
 from judge_client import JudgeClient
-from utils import server_info, logger, token, ProblemIOMode
-from languages import lang_map
+from languages import OptionType, lang_map
+from utils import ProblemIOMode, logger, server_info, token
 
 app = Flask(__name__)
 DEBUG = os.environ.get("judger_debug") == "1"
@@ -59,13 +59,14 @@ class JudgeServer:
         return data
 
     @classmethod
-    def judge(cls, language, src, max_cpu_time, max_memory, test_case_id=None, test_case=None,
-              spj_version=None, spj_config=None, spj_compile_config=None, spj_src=None, output=False,
+    def judge(cls, language, src, max_cpu_time, max_memory, options: Optional[OptionType] = None, test_case_id=None,
+              test_case=None, spj_version=None, spj_config=None, spj_compile_config=None, spj_src=None, output=False,
               io_mode=None):
         """
 
         :param language: 语言
         :param src: 要运行的代码
+        :param options: {'version': ..., 'io_mode': ..., 'enable_asan': ..., 'enable_lsan': ...}
         :param max_cpu_time:
         :param max_memory:
         :param test_case_id:
@@ -75,19 +76,22 @@ class JudgeServer:
         :param spj_compile_config:
         :param spj_src:
         :param output:
-        :param io_mode:
+        :param io_mode: {'io_mode': ...(, 'input': ..., 'output': ...)}
         :return:
         """
-        language_config = lang_map[language]  # 根据传入的语言决定采用哪一种配置
-
         if not io_mode:
             io_mode = {"io_mode": ProblemIOMode.standard}
+
+        if options is None:
+            options = io_mode
+        else:
+            options.update(io_mode)
+
+        language_config = lang_map[language](options, io_mode["io_mode"])  # 根据传入的语言决定采用哪一种配置
 
         if not (test_case or test_case_id) or (test_case and test_case_id):
             raise JudgeClientError("invalid parameter")
         # init
-        compile_config = language_config.get("compile")
-        run_config = language_config["run"]
         submission_id = uuid.uuid4().hex
 
         is_spj = spj_version and spj_config
@@ -106,8 +110,8 @@ class JudgeServer:
             submission_dir, test_case_dir = dirs
             test_case_dir = test_case_dir or os.path.join(TEST_CASE_DIR, test_case_id)
 
-            if compile_config:
-                src_path = os.path.join(submission_dir, compile_config["src_name"])
+            if language_config.compiled:
+                src_path = os.path.join(submission_dir, language_config.src_name)
 
                 # write source code into file
                 with open(src_path, "w", encoding="utf-8") as f:
@@ -116,7 +120,7 @@ class JudgeServer:
                 os.chmod(src_path, 0o400)
 
                 # compile source code, return exe file path
-                exe_path = Compiler().compile(compile_config=compile_config,
+                exe_path = Compiler().compile(language_config=language_config,
                                               src_path=src_path,
                                               output_dir=submission_dir)
                 try:
@@ -127,7 +131,7 @@ class JudgeServer:
                 except Exception:
                     pass
             else:
-                exe_path = os.path.join(submission_dir, run_config["exe_name"])
+                exe_path = os.path.join(submission_dir, language_config.exe_name)
                 with open(exe_path, "w", encoding="utf-8") as f:
                     f.write(src)
 
@@ -162,7 +166,7 @@ class JudgeServer:
                 with open(os.path.join(test_case_dir, "info"), "w") as f:
                     json.dump(info, f)
 
-            judge_client = JudgeClient(run_config=language_config["run"],
+            judge_client = JudgeClient(language_config=language_config,
                                        exe_path=exe_path,
                                        max_cpu_time=max_cpu_time,
                                        max_memory=max_memory,
@@ -191,7 +195,7 @@ class JudgeServer:
             os.chmod(spj_src_path, 0o400)
 
         try:
-            exe_path = Compiler().compile(compile_config=spj_compile_config,
+            exe_path = Compiler().compile(language_config=spj_compile_config,
                                           src_path=spj_src_path,
                                           output_dir=SPJ_EXE_DIR)
             os.chown(exe_path, SPJ_USER_UID, 0)

@@ -2,47 +2,187 @@
 from __future__ import unicode_literals
 
 import platform
+from typing import Literal, Optional, Type, TypedDict
 
-from utils import ProblemIOMode
+# from utils import ProblemIOMode
+from server.utils import ProblemIOMode
 
 py_version = ''.join(platform.python_version().split('.')[:2])
 
 default_env = ["LANG=en_US.UTF-8", "LANGUAGE=en_US:en", "LC_ALL=en_US.UTF-8"]
 
-c_lang_config = {
-    "compile": {
-        "src_name": "main.c",
-        "exe_name": "main",
-        "max_cpu_time": 3000,
-        "max_real_time": 10000,
-        "max_memory": 256 * 1024 * 1024,
-        "compile_command": "/usr/bin/gcc -DONLINE_JUDGE -O2 -w -fmax-errors=3 -std=c11 {src_path} -lm -o {exe_path}",
-    },
-    "run": {
-        "command": "{exe_path}",
-        "seccomp_rule": {ProblemIOMode.standard: "c_cpp", ProblemIOMode.file: "c_cpp_file_io"},
-        "env": default_env
-    }
-}
 
-# 降低编译优化等级，增加运行时越界检查
-c_lang_address_sanitizer_config = {
-    "compile": {
-        "src_name": "main.c",
-        "exe_name": "main",
-        "max_cpu_time": 3000,
-        "max_real_time": 10000,
-        "max_memory": 256 * 1024 * 1024,
-        "compile_command": "/usr/bin/gcc -DONLINE_JUDGE -O1 -w -fsanitize=address -fno-omit-frame-pointer "
-                           "-fmax-errors=3 -std=c11 {src_path} -lm -o {exe_path}",
-    },
-    "run": {
-        "command": "{exe_path}",  # 关闭内存泄漏检测
-        "memory_limit_check_only": 1,  # 限制最大内存可能造成错误
-        "seccomp_rule": "c_cpp_asan",  # c_cpp规则（白名单）限制系统调用导致sanitizer无法运行，暂时放宽到c_cpp_asan（黑名单）
-        "env": default_env + ["ASAN_OPTIONS=detect_leaks=0"]
-    }
-}
+class OptionType(TypedDict, total=False):
+    version: Optional[str]  # C/C++ 语言标准，如 C11, C++11 等
+    enable_asan: bool  # 是否使用 Address Sanitizer (越界检查)，默认关闭
+    enable_lsan: bool  # 是否使用 Leak Sanitizer (内存泄漏检查)，默认关闭
+
+
+class BaseLanguageConfig:
+    def __init__(self, options: Optional[OptionType] = None,
+                 io_mode: Optional[Literal['stdio', 'file']] = ProblemIOMode.standard):
+        self.options = options or {}
+        self.src_name = None
+        self.exe_name = None
+        self.max_cpu_time = 10000  # 最大编译占用 CPU 时间
+        self.max_real_time = 20000  # 最大编译占用真实时间
+        self.max_memory = 1024 * 1024 * 1024  # 最大编译占用内存
+        self._compile_command = None
+        self._execute_command = None
+        self._seccomp_rule: str = 'general'
+        self._env: list[str] = default_env
+        self.memory_limit_check_only = 0  # 是否仅检查内存限制，默认 0 不检查，1 检查
+        self.compiled = True  # 是否编译型语言
+
+        self.io_mode = io_mode
+        assert self.io_mode in {ProblemIOMode.standard, ProblemIOMode.file}
+        self.enable_asan = self.options.get('enable_asan', False)
+        self.enable_lsan = self.options.get('enable_lsan', False)
+
+    @property
+    def compile_command(self) -> str:
+        return self._compile_command
+
+    @property
+    def execute_command(self) -> str:
+        return self._execute_command
+
+    @property
+    def seccomp_rule(self) -> str:
+        return self._seccomp_rule
+
+    @property
+    def env(self) -> list[str]:
+        return self._env
+
+
+class CConfig(BaseLanguageConfig):
+    def __init__(self, options: OptionType = None):
+        super().__init__(options)
+        self.src_name = 'main.c'
+        self.exe_name = 'main'
+        self.max_cpu_time = 3000
+        self.max_real_time = 10000
+        self.max_memory = 256 * 1024 * 1024
+        self._execute_command = '{exe_path}'
+        self.compiler = '/usr/bin/gcc'
+        self.std = self.options.get('version', 'c11').lower() or 'c11'
+        assert self.std in {'c89', 'c90', 'c99', 'c11', 'c17', 'c18',
+                            'gnu89', 'gnu90', 'gnu99', 'gnu11', 'gnu17', 'gnu18'}, f"Unsupported C standard: {self.std}"
+        if self.enable_asan:
+            self.memory_limit_check_only = 1
+
+    @property
+    def compile_command(self) -> str:
+        params = ['-std=' + self.std]
+        if self.enable_asan:
+            params.append('-O1 -fsanitize=address -fno-omit-frame-pointer')
+        else:
+            params.append('-O2')
+
+        command = [self.compiler, ' -DONLINE_JUDGE -w ', *params, ' -fmax-errors=3 {src_path} -lm -o {exe_path}']
+        command = ' '.join(command)
+        return command
+
+    @property
+    def seccomp_rule(self) -> str:
+        if self.enable_asan:
+            return 'c_cpp_asan'
+        return {
+            ProblemIOMode.standard: 'c_cpp',
+            ProblemIOMode.file: 'c_cpp_file_io'
+        }[self.io_mode]
+
+    @property
+    def env(self) -> list[str]:
+        if self.enable_lsan:
+            return default_env
+        return default_env + ['ASAN_OPTIONS=detect_leaks=0']
+
+
+class CppConfig(CConfig):
+    def __init__(self, options: OptionType = None):
+        super().__init__(options)
+        self.src_name = 'main.cpp'
+        self.max_cpu_time = 10000
+        self.max_real_time = 20000
+        self.max_memory = 1024 * 1024 * 1024
+
+        self.compiler = '/usr/bin/g++'
+        self.std = self.options.get('version', 'c++14').lower() or 'c++14'
+        assert self.std in {'c++98', 'c++03', 'c++11', 'c++14', 'c++17', 'c++20', 'c++23',
+                            'gnu++98', 'gnu++03', 'gnu++11', 'gnu++14', 'gnu++17', 'gnu++20',
+                            'gnu++23'}, f"Unsupported C++ standard: {self.std}"
+
+
+class JavaConfig(BaseLanguageConfig):
+    def __init__(self, options: OptionType = None):
+        super().__init__(options)
+        self.src_name = 'Main.java'
+        self.exe_name = 'Main'
+        self.max_cpu_time = 5000
+        self.max_real_time = 10000
+        self.max_memory = -1  # 不限制
+        self._compile_command = '/usr/bin/javac {src_path} -d {exe_dir} -encoding UTF8'
+        self._execute_command = '/usr/bin/java -cp {exe_dir} -XX:MaxRAM={max_memory}k -Djava.security.manager ' \
+                                '-Dfile.encoding=UTF-8 -Djava.security.policy==/etc/java_policy ' \
+                                '-Djava.awt.headless=true Main'
+
+
+class Py3Config(BaseLanguageConfig):
+    def __init__(self, options: OptionType = None):
+        super().__init__(options)
+        self.src_name = 'main.py'
+        self.exe_name = 'main.py'
+        self.max_cpu_time = 3000
+        self.max_real_time = 10000
+        self.max_memory = 128 * 1024 * 1024
+        self._compile_command = '/usr/bin/python3 -m py_compile {src_path}'
+        self._execute_command = '/usr/bin/python3 {exe_path}'
+        self._env = default_env + ['PYTHONIOENCODING=utf-8']
+        self.compiled = False
+
+
+class GoConfig(BaseLanguageConfig):
+    def __init__(self, options: OptionType = None):
+        super().__init__(options)
+        self.src_name = 'main.go'
+        self.exe_name = 'main'
+        self.max_cpu_time = 3000
+        self.max_real_time = 5000
+        self.max_memory = 1024 * 1024 * 1024
+        self._compile_command = '/usr/bin/go build -o {exe_path} {src_path}'
+        self._execute_command = '{exe_path}'
+        self._seccomp_rule = 'golang'
+        # 降低内存占用
+        self._env = default_env + ['GODEBUG=madvdontneed=1', 'GOCACHE=/tmp', 'GOPATH=/tmp/go']
+
+        self.memory_limit_check_only = 1
+
+
+class PHPConfig(BaseLanguageConfig):
+    def __init__(self, options: OptionType = None):
+        super().__init__(options)
+        self.src_name = 'solution.php'
+        self.exe_name = 'solution.php'
+        self._execute_command = '/usr/bin/php {exe_path}'
+        self._env = default_env
+        self.memory_limit_check_only = 1
+        self.compiled = False
+        self._seccomp_rule = ''  # 不使用 seccomp
+
+
+class JSConfig(BaseLanguageConfig):
+    def __init__(self, options: OptionType = None):
+        super().__init__(options)
+        self.src_name = 'solution.js'
+        self.exe_name = 'solution.js'
+        self._execute_command = '/usr/bin/node {exe_path}'
+        self._env = default_env + ["NO_COLOR=true"]
+        self._seccomp_rule = 'node'
+        self.memory_limit_check_only = 1
+        self.compiled = False
+
 
 c_lang_spj_compile = {
     "src_name": "spj-{spj_version}.c",
@@ -57,41 +197,6 @@ c_lang_spj_config = {
     "exe_name": "spj-{spj_version}",
     "command": "{exe_path} {in_file_path} {user_out_file_path}",
     "seccomp_rule": "c_cpp"
-}
-
-cpp_lang_config = {
-    "compile": {
-        "src_name": "main.cpp",
-        "exe_name": "main",
-        "max_cpu_time": 10000,
-        "max_real_time": 20000,
-        "max_memory": 1024 * 1024 * 1024,
-        "compile_command": "/usr/bin/g++ -DONLINE_JUDGE -O2 -w -fmax-errors=3 -std=c++14 {src_path} -lm -o {exe_path}",
-    },
-    "run": {
-        "command": "{exe_path}",
-        "seccomp_rule": {ProblemIOMode.standard: "c_cpp", ProblemIOMode.file: "c_cpp_file_io"},
-        "env": default_env
-    }
-}
-
-# 降低编译优化等级，增加运行时越界检查
-cpp_lang_address_sanitizer_config = {
-    "compile": {
-        "src_name": "main.cpp",
-        "exe_name": "main",
-        "max_cpu_time": 10000,
-        "max_real_time": 20000,
-        "max_memory": 1024 * 1024 * 1024,
-        "compile_command": "/usr/bin/g++ -DONLINE_JUDGE -O1 -w -fsanitize=address  -fno-omit-frame-pointer "
-                           "-fmax-errors=3 -std=c++14 {src_path} -lm -o {exe_path}",
-    },
-    "run": {
-        "command": "{exe_path}",
-        "memory_limit_check_only": 1,  # 限制最大内存可能造成错误
-        "seccomp_rule": "c_cpp_asan",  # c_cpp规则（白名单）限制系统调用导致sanitizer无法运行，暂时放宽到c_cpp_asan（黑名单）
-        "env": default_env + ["ASAN_OPTIONS=detect_leaks=0"]  # 关闭内存泄漏检测
-    }
 }
 
 cpp_lang_spj_compile = {
@@ -109,86 +214,14 @@ cpp_lang_spj_config = {
     "seccomp_rule": "c_cpp"
 }
 
-java_lang_config = {
-    "name": "java",
-    "compile": {
-        "src_name": "Main.java",
-        "exe_name": "Main",
-        "max_cpu_time": 5000,
-        "max_real_time": 10000,
-        "max_memory": -1,
-        "compile_command": "/usr/bin/javac {src_path} -d {exe_dir} -encoding UTF8"
-    },
-    "run": {
-        "command": "/usr/bin/java -cp {exe_dir} -XX:MaxRAM={max_memory}k -Djava.security.manager -Dfile.encoding=UTF-8 "
-                   "-Djava.security.policy==/etc/java_policy -Djava.awt.headless=true Main",
-        "seccomp_rule": None,
-        "env": default_env,
-        "memory_limit_check_only": 1
-    }
+lang_map: dict[str, Type[BaseLanguageConfig]] = {
+    'c': CConfig,
+    'cpp': CppConfig,
+    'java': JavaConfig,
+    'py': Py3Config,
+    'go': GoConfig,
+    'php': PHPConfig,
+    'js': JSConfig,
 }
-
-py3_lang_config = {
-    "compile": {
-        "src_name": "solution.py",
-        "exe_name": f"__pycache__/solution.cpython-{py_version}.pyc",
-        "max_cpu_time": 3000,
-        "max_real_time": 10000,
-        "max_memory": 128 * 1024 * 1024,
-        "compile_command": "/usr/bin/python3 -m py_compile {src_path}",
-    },
-    "run": {
-        "command": "/usr/bin/python3 {exe_path}",
-        "seccomp_rule": "general",
-        "env": default_env + ["PYTHONIOENCODING=utf-8"]
-    }
-}
-
-go_lang_config = {
-    "compile": {
-        "src_name": "main.go",
-        "exe_name": "main",
-        "max_cpu_time": 3000,
-        "max_real_time": 5000,
-        "max_memory": 1024 * 1024 * 1024,
-        "compile_command": "/usr/bin/go build -o {exe_path} {src_path}",
-        "env": ["GOCACHE=/tmp", "GOPATH=/tmp/go"]
-    },
-    "run": {
-        "command": "{exe_path}",
-        "seccomp_rule": "",
-        # 降低内存占用
-        "env": ["GODEBUG=madvdontneed=1"] + default_env,
-        "memory_limit_check_only": 1
-    }
-}
-
-php_lang_config = {
-    "run": {
-        "exe_name": "solution.php",
-        "command": "/usr/bin/php {exe_path}",
-        "seccomp_rule": "",
-        "env": default_env,
-        "memory_limit_check_only": 1
-    }
-}
-
-js_lang_config = {
-    "run": {
-        "exe_name": "solution.js",
-        "command": "/usr/bin/node {exe_path}",
-        "seccomp_rule": "",
-        "env": ["NO_COLOR=true"] + default_env,
-        "memory_limit_check_only": 1
-    }
-}
-
-lang_map = {
-    "c": c_lang_config,
-    "c_asan": c_lang_address_sanitizer_config,
-    "cpp": cpp_lang_config,
-    "cpp_asan": cpp_lang_address_sanitizer_config,
-    "java": java_lang_config,
-    "py": py3_lang_config,
-    "go": go_lang_config
-}
+if __name__ == '__main__':
+    print(CppConfig().compile_command)

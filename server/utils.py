@@ -34,8 +34,8 @@ def get_token():
 
 
 class ProblemIOMode:
-    standard = "Standard IO"
-    file = "File IO"
+    standard = "stdio"
+    file = "file"
 
 
 token = hashlib.sha256(get_token().encode("utf-8")).hexdigest()

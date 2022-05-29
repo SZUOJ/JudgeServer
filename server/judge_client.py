@@ -2,19 +2,19 @@ import hashlib
 import json
 import os
 import re
+import shlex
 import shutil
 from multiprocessing import Pool
-import shlex
+from typing import Tuple
 
 import judger
 import psutil
 
-from config import JUDGER_RUN_LOG_PATH, MAX_OUTPUT_BYTES, MAX_READ_BYTES, RUN_USER_UID, SPJ_EXE_DIR, SPJ_USER_UID, \
-    SPJ_GROUP_GID, \
-    RUN_GROUP_GID
+from config import JUDGER_RUN_LOG_PATH, MAX_READ_BYTES, MAX_RESP_BYTES, RUN_GROUP_GID, RUN_USER_UID, SPJ_EXE_DIR, \
+    SPJ_GROUP_GID, SPJ_USER_UID
 from exception import JudgeClientError
+from languages import BaseLanguageConfig
 from utils import ProblemIOMode
-from typing import Tuple
 
 SPJ_WA = 1
 SPJ_AC = 0
@@ -26,9 +26,9 @@ def _run(instance, test_case_file_id):
 
 
 class JudgeClient(object):
-    def __init__(self, run_config, exe_path, max_cpu_time, max_memory, test_case_dir,
+    def __init__(self, language_config: BaseLanguageConfig, exe_path, max_cpu_time, max_memory, test_case_dir,
                  submission_dir, spj_version, spj_config, io_mode, output=False):
-        self._run_config = run_config
+        self._language_config = language_config
         self._exe_path = exe_path
         self._max_cpu_time = max_cpu_time
         self._max_memory = max_memory
@@ -95,21 +95,21 @@ class JudgeClient(object):
         command = shlex.split(command)
         seccomp_rule_name = self._spj_config["seccomp_rule"]
         result = judger.run(max_cpu_time=self._max_cpu_time * 3,
-                             max_real_time=self._max_cpu_time * 9,
-                             max_memory=self._max_memory * 3,
-                             max_stack=128 * 1024 * 1024,
-                             max_output_size=1024 * 1024 * 1024,
-                             max_process_number=judger.UNLIMITED,
-                             exe_path=command[0],
-                             input_path=in_file_path,
-                             output_path="/tmp/spj.out",
-                             error_path="/tmp/spj.out",
-                             args=command[1::],
-                             env=["PATH=" + os.environ.get("PATH", "")],
-                             log_path=JUDGER_RUN_LOG_PATH,
-                             seccomp_rule_name=seccomp_rule_name,
-                             uid=SPJ_USER_UID,
-                             gid=SPJ_GROUP_GID)
+                            max_real_time=self._max_cpu_time * 9,
+                            max_memory=self._max_memory * 3,
+                            max_stack=128 * 1024 * 1024,
+                            max_output_size=1024 * 1024 * 1024,
+                            max_process_number=judger.UNLIMITED,
+                            exe_path=command[0],
+                            input_path=in_file_path,
+                            output_path="/tmp/spj.out",
+                            error_path="/tmp/spj.out",
+                            args=command[1::],
+                            env=["PATH=" + os.environ.get("PATH", "")],
+                            log_path=JUDGER_RUN_LOG_PATH,
+                            seccomp_rule_name=seccomp_rule_name,
+                            uid=SPJ_USER_UID,
+                            gid=SPJ_GROUP_GID)
 
         if result["result"] == judger.RESULT_SUCCESS or \
                 (result["result"] == judger.RESULT_RUNTIME_ERROR and
@@ -137,30 +137,28 @@ class JudgeClient(object):
             real_user_output_file = user_output_file = os.path.join(self._submission_dir, test_case_file_id + ".out")
             kwargs = {"input_path": in_file, "output_path": real_user_output_file, "error_path": real_user_output_file}
 
-        command = self._run_config["command"].format(exe_path=self._exe_path, exe_dir=os.path.dirname(self._exe_path),
-                                                     max_memory=int(self._max_memory / 1024))
+        command = self._language_config.execute_command.format(exe_path=self._exe_path,
+                                                               exe_dir=os.path.dirname(self._exe_path))
         command = shlex.split(command)
-        env = ["PATH=" + os.environ.get("PATH", "")] + self._run_config.get("env", [])
+        env = ["PATH=" + os.environ.get("PATH", "")] + self._language_config.env
 
-        seccomp_rule = self._run_config["seccomp_rule"]
-        if isinstance(seccomp_rule, dict):
-            seccomp_rule = seccomp_rule[self._io_mode["io_mode"]]
+        seccomp_rule = self._language_config.seccomp_rule
 
         run_result = judger.run(max_cpu_time=self._max_cpu_time,
-                                 max_real_time=self._max_real_time,
-                                 max_memory=self._max_memory,
-                                 max_stack=128 * 1024 * 1024,
-                                 max_output_size=max(test_case_info.get("output_size", 0) * 2, 1024 * 1024 * 16),
-                                 max_process_number=judger.UNLIMITED,
-                                 exe_path=command[0],
-                                 args=command[1::],
-                                 env=env,
-                                 log_path=JUDGER_RUN_LOG_PATH,
-                                 seccomp_rule_name=seccomp_rule,
-                                 uid=RUN_USER_UID,
-                                 gid=RUN_GROUP_GID,
-                                 memory_limit_check_only=self._run_config.get("memory_limit_check_only", 0),
-                                 **kwargs)
+                                max_real_time=self._max_real_time,
+                                max_memory=self._max_memory,
+                                max_stack=128 * 1024 * 1024,
+                                max_output_size=max(test_case_info.get("output_size", 0) * 2, 1024 * 1024 * 16),
+                                max_process_number=judger.UNLIMITED,
+                                exe_path=command[0],
+                                args=command[1::],
+                                env=env,
+                                log_path=JUDGER_RUN_LOG_PATH,
+                                seccomp_rule_name=seccomp_rule,
+                                uid=RUN_USER_UID,
+                                gid=RUN_GROUP_GID,
+                                memory_limit_check_only=self._language_config.memory_limit_check_only,
+                                **kwargs)
         run_result["test_case"] = test_case_file_id
 
         # if progress exited normally, then we should check output result
@@ -188,7 +186,7 @@ class JudgeClient(object):
         if self._output:
             try:
                 with open(user_output_file, "rb") as f:
-                    temp_output = f.read(MAX_OUTPUT_BYTES).decode("utf-8", errors="backslashreplace")
+                    temp_output = f.read(MAX_RESP_BYTES).decode("utf-8", errors="backslashreplace")
                     run_result["output"] = re.sub(r'\u0000', '', temp_output)  # 去除\0
             except Exception:
                 pass

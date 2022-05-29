@@ -1,7 +1,6 @@
+import grp
 import os
 import pwd
-
-import grp
 
 JUDGER_WORKSPACE_BASE = "/judger/run"
 LOG_BASE = "/log"
@@ -24,4 +23,4 @@ SPJ_SRC_DIR = "/judger/spj"
 SPJ_EXE_DIR = "/judger/spj"
 
 MAX_READ_BYTES = 64 * 1024 * 1024  # 最大读取输出大小 64M
-MAX_OUTPUT_BYTES = 16 * 1024  # 最大传输输出大小 16K
+MAX_RESP_BYTES = 16 * 1024  # 最大服务器 API 响应输出大小 16K
