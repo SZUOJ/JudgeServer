@@ -1,10 +1,8 @@
-import json
 import os
 
 import requests
 
-from exception import JudgeServiceError
-from utils import server_info, logger, token
+from utils import logger, token
 
 
 class JudgeService:
@@ -15,26 +13,17 @@ class JudgeService:
     def _request(self, url, data=None):
         if data is None:
             data = {}
-        try:
-            return requests.post(url,
-                                 json=data,
-                                 headers={"X-JUDGE-SERVER-TOKEN": token,
-                                          "Content-Type": "application/json"}, timeout=5)
-        except Exception as exc:
-            logger.exception(exc)
-            raise JudgeServiceError("Heartbeat request failed")
+        return requests.post(url,
+                             json=data,
+                             headers={"X-JUDGE-SERVER-TOKEN": token,
+                                      "Content-Type": "application/json"}, timeout=5)
 
     def heartbeat(self):
         try:
-            info = self._request(url="http://localhost:8080/ping").json()["data"]
-            info["action"] = "heartbeat"
-            info["service_url"] = self.service_url
-            try:
-                self._request(url=self.backend_url, data=info)
-            except Exception as exc:
-                logger.exception(exc)
+            self._request(url="http://localhost:8080/ping")
             return 0
         except Exception as e:
+            logger.exception(f"Heartbeat request failed: {e}")
             return 1
 
 
