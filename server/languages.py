@@ -4,12 +4,17 @@ from __future__ import unicode_literals
 import platform
 from typing import Literal, Optional, Type, TypedDict
 
-# from utils import ProblemIOMode
 from utils import ProblemIOMode
 
 py_version = ''.join(platform.python_version().split('.')[:2])
 
 default_env = ["LANG=en_US.UTF-8", "LANGUAGE=en_US:en", "LC_ALL=en_US.UTF-8"]
+
+C_STDS = {'c89', 'c90', 'c99', 'c11', 'c17', 'c18',
+          'gnu89', 'gnu90', 'gnu99', 'gnu11', 'gnu17', 'gnu18'}
+CPP_STDS = {'c++98', 'c++03', 'c++11', 'c++14', 'c++17', 'c++20', 'c++23',
+            'gnu++98', 'gnu++03', 'gnu++11', 'gnu++14', 'gnu++17', 'gnu++20',
+            'gnu++23'}
 
 
 class OptionType(TypedDict, total=False):
@@ -57,8 +62,9 @@ class BaseLanguageConfig:
 
 
 class CConfig(BaseLanguageConfig):
-    def __init__(self, options: OptionType = None):
-        super().__init__(options)
+    def __init__(self, options: Optional[OptionType] = None,
+                 io_mode: Optional[Literal['stdio', 'file']] = ProblemIOMode.standard):
+        super().__init__(options, io_mode)
         self.src_name = 'main.c'
         self.exe_name = 'main'
         self.max_cpu_time = 3000
@@ -67,13 +73,18 @@ class CConfig(BaseLanguageConfig):
         self._execute_command = '{exe_path}'
         self.compiler = '/usr/bin/gcc'
         self.std = self.options.get('version', 'c11').lower() or 'c11'
-        assert self.std in {'c89', 'c90', 'c99', 'c11', 'c17', 'c18',
-                            'gnu89', 'gnu90', 'gnu99', 'gnu11', 'gnu17', 'gnu18'}, f"Unsupported C standard: {self.std}"
         if self.enable_asan:
             self.memory_limit_check_only = 1
 
     @property
     def compile_command(self) -> str:
+        if isinstance(self, CppConfig):
+            assert self.std in CPP_STDS, f"Unsupported C++ standard: {self.std}"
+        elif isinstance(self, CConfig):
+            assert self.std in C_STDS, f"Unsupported C standard: {self.std}"
+        else:
+            raise RuntimeError("compile_command validation error")
+
         params = ['-std=' + self.std]
         if self.enable_asan:
             params.append('-O1 -fsanitize=address -fno-omit-frame-pointer')
@@ -101,8 +112,9 @@ class CConfig(BaseLanguageConfig):
 
 
 class CppConfig(CConfig):
-    def __init__(self, options: OptionType = None):
-        super().__init__(options)
+    def __init__(self, options: Optional[OptionType] = None,
+                 io_mode: Optional[Literal['stdio', 'file']] = ProblemIOMode.standard):
+        super().__init__(options, io_mode)
         self.src_name = 'main.cpp'
         self.max_cpu_time = 10000
         self.max_real_time = 20000
@@ -110,14 +122,12 @@ class CppConfig(CConfig):
 
         self.compiler = '/usr/bin/g++'
         self.std = self.options.get('version', 'c++14').lower() or 'c++14'
-        assert self.std in {'c++98', 'c++03', 'c++11', 'c++14', 'c++17', 'c++20', 'c++23',
-                            'gnu++98', 'gnu++03', 'gnu++11', 'gnu++14', 'gnu++17', 'gnu++20',
-                            'gnu++23'}, f"Unsupported C++ standard: {self.std}"
 
 
 class JavaConfig(BaseLanguageConfig):
-    def __init__(self, options: OptionType = None):
-        super().__init__(options)
+    def __init__(self, options: Optional[OptionType] = None,
+                 io_mode: Optional[Literal['stdio', 'file']] = ProblemIOMode.standard):
+        super().__init__(options, io_mode)
         self.src_name = 'Main.java'
         self.exe_name = 'Main'
         self.max_cpu_time = 5000
@@ -130,8 +140,9 @@ class JavaConfig(BaseLanguageConfig):
 
 
 class Py3Config(BaseLanguageConfig):
-    def __init__(self, options: OptionType = None):
-        super().__init__(options)
+    def __init__(self, options: Optional[OptionType] = None,
+                 io_mode: Optional[Literal['stdio', 'file']] = ProblemIOMode.standard):
+        super().__init__(options, io_mode)
         self.src_name = 'main.py'
         self.exe_name = 'main.py'
         self.max_cpu_time = 3000
@@ -144,8 +155,9 @@ class Py3Config(BaseLanguageConfig):
 
 
 class GoConfig(BaseLanguageConfig):
-    def __init__(self, options: OptionType = None):
-        super().__init__(options)
+    def __init__(self, options: Optional[OptionType] = None,
+                 io_mode: Optional[Literal['stdio', 'file']] = ProblemIOMode.standard):
+        super().__init__(options, io_mode)
         self.src_name = 'main.go'
         self.exe_name = 'main'
         self.max_cpu_time = 3000
@@ -161,8 +173,9 @@ class GoConfig(BaseLanguageConfig):
 
 
 class PHPConfig(BaseLanguageConfig):
-    def __init__(self, options: OptionType = None):
-        super().__init__(options)
+    def __init__(self, options: Optional[OptionType] = None,
+                 io_mode: Optional[Literal['stdio', 'file']] = ProblemIOMode.standard):
+        super().__init__(options, io_mode)
         self.src_name = 'solution.php'
         self.exe_name = 'solution.php'
         self._execute_command = '/usr/bin/php {exe_path}'
@@ -173,8 +186,9 @@ class PHPConfig(BaseLanguageConfig):
 
 
 class JSConfig(BaseLanguageConfig):
-    def __init__(self, options: OptionType = None):
-        super().__init__(options)
+    def __init__(self, options: Optional[OptionType] = None,
+                 io_mode: Optional[Literal['stdio', 'file']] = ProblemIOMode.standard):
+        super().__init__(options, io_mode)
         self.src_name = 'solution.js'
         self.exe_name = 'solution.js'
         self._execute_command = '/usr/bin/node {exe_path}'
