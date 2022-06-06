@@ -2,9 +2,7 @@ name: Test
 
 on:
   push:
-    branches: [ develop ]
-  pull_request:
-    branches: [ develop ]
+    branches: [ master, develop ]
 
 jobs:
   build:
@@ -49,7 +47,7 @@ jobs:
           build-args: |
             OJ_JUDGER_VERSION=${{ env.OJ_BE_VERSION }}
           tags: |
-            registry.cn-shenzhen.aliyuncs.com/szuoj/judge_server:develop
+            registry.cn-shenzhen.aliyuncs.com/szuoj/judge_server:${{ github.ref_name }}
             registry.cn-shenzhen.aliyuncs.com/szuoj/judge_server:${{ env.OJ_JUDGER_VERSION }}
 #           分支（tag）名-commit_id
           cache-from: type=local,src=/tmp/.buildx-cache
