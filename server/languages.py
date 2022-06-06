@@ -5,7 +5,7 @@ import platform
 from typing import Literal, Optional, Type, TypedDict
 
 # from utils import ProblemIOMode
-from server.utils import ProblemIOMode
+from utils import ProblemIOMode
 
 py_version = ''.join(platform.python_version().split('.')[:2])
 
