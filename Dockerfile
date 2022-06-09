@@ -14,7 +14,7 @@ ENV OJ_JUDGER_VERSION=${OJ_JUDGER_VERSION}
 COPY requirements.txt .
 
 # php 目录需跟进版本
-RUN buildDeps='software-properties-common git libtool make cmake python3-dev python3-pip libseccomp-dev gpg-agent' && \
+RUN buildDeps='software-properties-common git libtool make cmake python3-dev python3-pip libseccomp-dev gpg-agent curl' && \
     apt-get update && apt-get install -y --no-install-recommends python3 python-pkg-resources python3-pkg-resources $buildDeps && \
     add-apt-repository ppa:openjdk-r/ppa && add-apt-repository ppa:longsleep/golang-backports && \
     add-apt-repository ppa:ubuntu-toolchain-r/test && \
