@@ -138,7 +138,8 @@ class JudgeClient(object):
             kwargs = {"input_path": in_file, "output_path": real_user_output_file, "error_path": real_user_output_file}
 
         command = self._language_config.execute_command.format(exe_path=self._exe_path,
-                                                               exe_dir=os.path.dirname(self._exe_path))
+                                                               exe_dir=os.path.dirname(self._exe_path),
+                                                               max_memory=int(self._max_memory / 1024))
         command = shlex.split(command)
         env = ["PATH=" + os.environ.get("PATH", "")] + self._language_config.env
 

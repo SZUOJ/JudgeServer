@@ -36,7 +36,7 @@ class BaseLanguageConfig:
         self._execute_command = None
         self._seccomp_rule: str = 'general'
         self._env: list[str] = default_env
-        self.memory_limit_check_only = 0  # 是否仅检查内存限制，默认 0 不检查，1 检查
+        self.memory_limit_check_only = 0  # 是否仅检查内存限制，默认 0 否，1 是
         self.compiled = True  # 是否编译型语言
 
         self.io_mode = io_mode
@@ -133,6 +133,8 @@ class JavaConfig(BaseLanguageConfig):
         self.max_cpu_time = 5000
         self.max_real_time = 10000
         self.max_memory = -1  # 不限制
+        self.memory_limit_check_only = 1
+        self._seccomp_rule = None
         self._compile_command = '/usr/bin/javac {src_path} -d {exe_dir} -encoding UTF8'
         self._execute_command = '/usr/bin/java -cp {exe_dir} -XX:MaxRAM={max_memory}k -Djava.security.manager ' \
                                 '-Dfile.encoding=UTF-8 -Djava.security.policy==/etc/java_policy ' \
@@ -182,7 +184,7 @@ class PHPConfig(BaseLanguageConfig):
         self._env = default_env
         self.memory_limit_check_only = 1
         self.compiled = False
-        self._seccomp_rule = ''  # 不使用 seccomp
+        self._seccomp_rule = None  # 不使用 seccomp
 
 
 class JSConfig(BaseLanguageConfig):
