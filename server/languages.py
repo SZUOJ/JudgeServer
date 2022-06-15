@@ -169,7 +169,7 @@ class GoConfig(BaseLanguageConfig):
         self._execute_command = '{exe_path}'
         self._seccomp_rule = 'golang'
         # 降低内存占用
-        self._env = default_env + ['GODEBUG=madvdontneed=1', 'GOCACHE=/tmp', 'GOPATH=/tmp/go']
+        self._env = default_env + ['GODEBUG=madvdontneed=1', 'GOMAXPROCS=1', 'GOCACHE=/tmp', 'GOPATH=/tmp/go']
 
         self.memory_limit_check_only = 1
 
