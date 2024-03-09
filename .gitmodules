@@ -1,0 +1,3 @@
+[submodule "Judger"]
+	path = Judger
+	url = https://github.com/SZUOJ/Judger.git
