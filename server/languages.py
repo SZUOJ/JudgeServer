@@ -6,15 +6,40 @@ from typing import Literal, Optional, Type, TypedDict
 
 from utils import ProblemIOMode
 
-py_version = ''.join(platform.python_version().split('.')[:2])
+py_version = "".join(platform.python_version().split(".")[:2])
 
 default_env = ["LANG=en_US.UTF-8", "LANGUAGE=en_US:en", "LC_ALL=en_US.UTF-8"]
 
-C_STDS = {'c89', 'c90', 'c99', 'c11', 'c17', 'c18',
-          'gnu89', 'gnu90', 'gnu99', 'gnu11', 'gnu17', 'gnu18'}
-CPP_STDS = {'c++98', 'c++03', 'c++11', 'c++14', 'c++17', 'c++20', 'c++23',
-            'gnu++98', 'gnu++03', 'gnu++11', 'gnu++14', 'gnu++17', 'gnu++20',
-            'gnu++23'}
+C_STDS = {
+    "c89",
+    "c90",
+    "c99",
+    "c11",
+    "c17",
+    "c18",
+    "gnu89",
+    "gnu90",
+    "gnu99",
+    "gnu11",
+    "gnu17",
+    "gnu18",
+}
+CPP_STDS = {
+    "c++98",
+    "c++03",
+    "c++11",
+    "c++14",
+    "c++17",
+    "c++20",
+    "c++23",
+    "gnu++98",
+    "gnu++03",
+    "gnu++11",
+    "gnu++14",
+    "gnu++17",
+    "gnu++20",
+    "gnu++23",
+}
 
 
 class OptionType(TypedDict, total=False):
@@ -24,8 +49,11 @@ class OptionType(TypedDict, total=False):
 
 
 class BaseLanguageConfig:
-    def __init__(self, options: Optional[OptionType] = None,
-                 io_mode: Optional[Literal['stdio', 'file']] = ProblemIOMode.standard):
+    def __init__(
+        self,
+        options: Optional[OptionType] = None,
+        io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
+    ):
         self.options = options or {}
         self.src_name = None
         self.exe_name = None
@@ -34,15 +62,15 @@ class BaseLanguageConfig:
         self.max_memory = 1024 * 1024 * 1024  # 最大编译占用内存
         self._compile_command = None
         self._execute_command = None
-        self._seccomp_rule: str = 'general'
+        self._seccomp_rule: str = "general"
         self._env: list[str] = default_env
         self.memory_limit_check_only = 0  # 是否仅检查内存限制，默认 0 否，1 是
         self.compiled = True  # 是否编译型语言
 
         self.io_mode = io_mode
         assert self.io_mode in {ProblemIOMode.standard, ProblemIOMode.file}
-        self.enable_asan = self.options.get('enable_asan', False)
-        self.enable_lsan = self.options.get('enable_lsan', False)
+        self.enable_asan = self.options.get("enable_asan", False)
+        self.enable_lsan = self.options.get("enable_lsan", False)
 
     @property
     def compile_command(self) -> str:
@@ -62,17 +90,20 @@ class BaseLanguageConfig:
 
 
 class CConfig(BaseLanguageConfig):
-    def __init__(self, options: Optional[OptionType] = None,
-                 io_mode: Optional[Literal['stdio', 'file']] = ProblemIOMode.standard):
+    def __init__(
+        self,
+        options: Optional[OptionType] = None,
+        io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
+    ):
         super().__init__(options, io_mode)
-        self.src_name = 'main.c'
-        self.exe_name = 'main'
+        self.src_name = "main.c"
+        self.exe_name = "main"
         self.max_cpu_time = 3000
         self.max_real_time = 10000
         self.max_memory = 256 * 1024 * 1024
-        self._execute_command = '{exe_path}'
-        self.compiler = '/usr/bin/gcc'
-        self.std = self.options.get('version', 'c11').lower() or 'c11'
+        self._execute_command = "{exe_path}"
+        self.compiler = "/usr/bin/gcc"
+        self.std = self.options.get("version", "c11").lower() or "c11"
         if self.enable_asan:
             self.memory_limit_check_only = 1
 
@@ -85,102 +116,128 @@ class CConfig(BaseLanguageConfig):
         else:
             raise RuntimeError("compile_command validation error")
 
-        params = ['-std=' + self.std]
+        params = ["-std=" + self.std]
         if self.enable_asan:
-            params.append('-O1 -fsanitize=address -fno-omit-frame-pointer')
+            params.append("-O1 -fsanitize=address -fno-omit-frame-pointer")
         else:
-            params.append('-O2')
+            params.append("-O2")
 
-        command = [self.compiler, ' -DONLINE_JUDGE -w ', *params, ' -fmax-errors=3 {src_path} -lm -o {exe_path}']
-        command = ' '.join(command)
+        command = [
+            self.compiler,
+            " -DONLINE_JUDGE -w ",
+            *params,
+            " -fmax-errors=3 {src_path} -lm -o {exe_path}",
+        ]
+        command = " ".join(command)
         return command
 
     @property
     def seccomp_rule(self) -> str:
         if self.enable_asan:
-            return 'c_cpp_asan'
-        return {
-            ProblemIOMode.standard: 'c_cpp',
-            ProblemIOMode.file: 'c_cpp_file_io'
-        }[self.io_mode]
+            return "c_cpp_asan"
+        return {ProblemIOMode.standard: "c_cpp", ProblemIOMode.file: "c_cpp_file_io"}[
+            self.io_mode
+        ]
 
     @property
     def env(self) -> list[str]:
         if self.enable_lsan:
             return default_env
-        return default_env + ['ASAN_OPTIONS=detect_leaks=0']
+        return default_env + ["ASAN_OPTIONS=detect_leaks=0"]
 
 
 class CppConfig(CConfig):
-    def __init__(self, options: Optional[OptionType] = None,
-                 io_mode: Optional[Literal['stdio', 'file']] = ProblemIOMode.standard):
+    def __init__(
+        self,
+        options: Optional[OptionType] = None,
+        io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
+    ):
         super().__init__(options, io_mode)
-        self.src_name = 'main.cpp'
+        self.src_name = "main.cpp"
         self.max_cpu_time = 10000
         self.max_real_time = 20000
         self.max_memory = 1024 * 1024 * 1024
 
-        self.compiler = '/usr/bin/g++'
-        self.std = self.options.get('version', 'c++14').lower() or 'c++14'
+        self.compiler = "/usr/bin/g++"
+        self.std = self.options.get("version", "c++14").lower() or "c++14"
 
 
 class JavaConfig(BaseLanguageConfig):
-    def __init__(self, options: Optional[OptionType] = None,
-                 io_mode: Optional[Literal['stdio', 'file']] = ProblemIOMode.standard):
+    def __init__(
+        self,
+        options: Optional[OptionType] = None,
+        io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
+    ):
         super().__init__(options, io_mode)
-        self.src_name = 'Main.java'
-        self.exe_name = 'Main'
+        self.src_name = "Main.java"
+        self.exe_name = "Main"
         self.max_cpu_time = 5000
         self.max_real_time = 10000
         self.max_memory = -1  # 不限制
         self.memory_limit_check_only = 1
         self._seccomp_rule = None
-        self._compile_command = '/usr/bin/javac {src_path} -d {exe_dir} -encoding UTF8'
-        self._execute_command = '/usr/bin/java -cp {exe_dir} -XX:MaxRAM={max_memory}k -Djava.security.manager ' \
-                                '-Dfile.encoding=UTF-8 -Djava.security.policy==/etc/java_policy ' \
-                                '-Djava.awt.headless=true Main'
+        self._compile_command = "/usr/bin/javac {src_path} -d {exe_dir} -encoding UTF8"
+        self._execute_command = (
+            "/usr/bin/java -cp {exe_dir} -XX:MaxRAM={max_memory}k -Djava.security.manager "
+            "-Dfile.encoding=UTF-8 -Djava.security.policy==/etc/java_policy "
+            "-Djava.awt.headless=true Main"
+        )
 
 
 class Py3Config(BaseLanguageConfig):
-    def __init__(self, options: Optional[OptionType] = None,
-                 io_mode: Optional[Literal['stdio', 'file']] = ProblemIOMode.standard):
+    def __init__(
+        self,
+        options: Optional[OptionType] = None,
+        io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
+    ):
         super().__init__(options, io_mode)
-        self.src_name = 'main.py'
-        self.exe_name = 'main.py'
+        self.src_name = "main.py"
+        self.exe_name = "main.py"
         self.max_cpu_time = 3000
         self.max_real_time = 10000
         self.max_memory = 128 * 1024 * 1024
-        self._compile_command = '/usr/bin/python3 -m py_compile {src_path}'
-        self._execute_command = '/usr/bin/python3 {exe_path}'
-        self._env = default_env + ['PYTHONIOENCODING=utf-8']
+        self._compile_command = "/usr/bin/python3 -m py_compile {src_path}"
+        self._execute_command = "/usr/bin/python3 {exe_path}"
+        self._env = default_env + ["PYTHONIOENCODING=utf-8"]
         self.compiled = False
 
 
 class GoConfig(BaseLanguageConfig):
-    def __init__(self, options: Optional[OptionType] = None,
-                 io_mode: Optional[Literal['stdio', 'file']] = ProblemIOMode.standard):
+    def __init__(
+        self,
+        options: Optional[OptionType] = None,
+        io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
+    ):
         super().__init__(options, io_mode)
-        self.src_name = 'main.go'
-        self.exe_name = 'main'
+        self.src_name = "main.go"
+        self.exe_name = "main"
         self.max_cpu_time = 3000
         self.max_real_time = 5000
         self.max_memory = 1024 * 1024 * 1024
-        self._compile_command = '/usr/bin/go build -o {exe_path} {src_path}'
-        self._execute_command = '{exe_path}'
-        self._seccomp_rule = 'golang'
+        self._compile_command = "/usr/bin/go build -o {exe_path} {src_path}"
+        self._execute_command = "{exe_path}"
+        self._seccomp_rule = "golang"
         # 降低内存占用
-        self._env = default_env + ['GODEBUG=madvdontneed=1', 'GOMAXPROCS=1', 'GOCACHE=/tmp', 'GOPATH=/tmp/go']
+        self._env = default_env + [
+            "GODEBUG=madvdontneed=1",
+            "GOMAXPROCS=1",
+            "GOCACHE=/tmp",
+            "GOPATH=/tmp/go",
+        ]
 
         self.memory_limit_check_only = 1
 
 
 class PHPConfig(BaseLanguageConfig):
-    def __init__(self, options: Optional[OptionType] = None,
-                 io_mode: Optional[Literal['stdio', 'file']] = ProblemIOMode.standard):
+    def __init__(
+        self,
+        options: Optional[OptionType] = None,
+        io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
+    ):
         super().__init__(options, io_mode)
-        self.src_name = 'solution.php'
-        self.exe_name = 'solution.php'
-        self._execute_command = '/usr/bin/php {exe_path}'
+        self.src_name = "solution.php"
+        self.exe_name = "solution.php"
+        self._execute_command = "/usr/bin/php {exe_path}"
         self._env = default_env
         self.memory_limit_check_only = 1
         self.compiled = False
@@ -188,14 +245,17 @@ class PHPConfig(BaseLanguageConfig):
 
 
 class JSConfig(BaseLanguageConfig):
-    def __init__(self, options: Optional[OptionType] = None,
-                 io_mode: Optional[Literal['stdio', 'file']] = ProblemIOMode.standard):
+    def __init__(
+        self,
+        options: Optional[OptionType] = None,
+        io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
+    ):
         super().__init__(options, io_mode)
-        self.src_name = 'solution.js'
-        self.exe_name = 'solution.js'
-        self._execute_command = '/usr/bin/node {exe_path}'
+        self.src_name = "solution.js"
+        self.exe_name = "solution.js"
+        self._execute_command = "/usr/bin/node {exe_path}"
         self._env = default_env + ["NO_COLOR=true"]
-        self._seccomp_rule = 'node'
+        self._seccomp_rule = "node"
         self.memory_limit_check_only = 1
         self.compiled = False
 
@@ -206,13 +266,13 @@ c_lang_spj_compile = {
     "max_cpu_time": 3000,
     "max_real_time": 5000,
     "max_memory": 1024 * 1024 * 1024,
-    "compile_command": "/usr/bin/gcc -DONLINE_JUDGE -O2 -w -fmax-errors=3 -std=c99 {src_path} -lm -o {exe_path}"
+    "compile_command": "/usr/bin/gcc -DONLINE_JUDGE -O2 -w -fmax-errors=3 -std=c99 {src_path} -lm -o {exe_path}",
 }
 
 c_lang_spj_config = {
     "exe_name": "spj-{spj_version}",
     "command": "{exe_path} {in_file_path} {user_out_file_path}",
-    "seccomp_rule": "c_cpp"
+    "seccomp_rule": "c_cpp",
 }
 
 cpp_lang_spj_compile = {
@@ -221,23 +281,23 @@ cpp_lang_spj_compile = {
     "max_cpu_time": 10000,
     "max_real_time": 20000,
     "max_memory": 1024 * 1024 * 1024,
-    "compile_command": "/usr/bin/g++ -DONLINE_JUDGE -O2 -w -fmax-errors=3 -std=c++14 {src_path} -lm -o {exe_path}"
+    "compile_command": "/usr/bin/g++ -DONLINE_JUDGE -O2 -w -fmax-errors=3 -std=c++14 {src_path} -lm -o {exe_path}",
 }
 
 cpp_lang_spj_config = {
     "exe_name": "spj-{spj_version}",
     "command": "{exe_path} {in_file_path} {user_out_file_path}",
-    "seccomp_rule": "c_cpp"
+    "seccomp_rule": "c_cpp",
 }
 
 lang_map: dict[str, Type[BaseLanguageConfig]] = {
-    'c': CConfig,
-    'cpp': CppConfig,
-    'java': JavaConfig,
-    'py': Py3Config,
-    'go': GoConfig,
-    'php': PHPConfig,
-    'js': JSConfig,
+    "c": CConfig,
+    "cpp": CppConfig,
+    "java": JavaConfig,
+    "py": Py3Config,
+    "go": GoConfig,
+    "php": PHPConfig,
+    "js": JSConfig,
 }
-if __name__ == '__main__':
+if __name__ == "__main__":
     print(CppConfig().compile_command)

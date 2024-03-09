@@ -13,10 +13,12 @@ class JudgeService:
     def _request(self, url, data=None):
         if data is None:
             data = {}
-        return requests.post(url,
-                             json=data,
-                             headers={"X-JUDGE-SERVER-TOKEN": token,
-                                      "Content-Type": "application/json"}, timeout=5)
+        return requests.post(
+            url,
+            json=data,
+            headers={"X-JUDGE-SERVER-TOKEN": token, "Content-Type": "application/json"},
+            timeout=5,
+        )
 
     def heartbeat(self):
         try:
