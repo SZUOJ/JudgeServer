@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import platform
+from enum import StrEnum
 from typing import Literal, Optional, Type, TypedDict
 
 from utils import ProblemIOMode
@@ -42,6 +43,16 @@ CPP_STDS = {
 }
 
 
+class SeccompRule(StrEnum):
+    GENERAL = "general"
+    GENERAL_FILE_IO = "general_file_io"
+    C_CPP = "c_cpp"
+    C_CPP_FILE_IO = "c_cpp_file_io"
+    C_CPP_ASAN = "c_cpp_asan"
+    GOLANG = "golang"
+    NODE = "node"
+
+
 class OptionType(TypedDict, total=False):
     version: Optional[str]  # C/C++ 语言标准，如 C11, C++11 等
     enable_asan: bool  # 是否使用 Address Sanitizer (越界检查)，默认关闭
@@ -62,7 +73,11 @@ class BaseLanguageConfig:
         self.max_memory = 1024 * 1024 * 1024  # 最大编译占用内存
         self._compile_command = None
         self._execute_command = None
-        self._seccomp_rule: str = "general"
+        if io_mode == ProblemIOMode.standard:
+            self._seccomp_rule: str = SeccompRule.GENERAL
+        else:
+            self._seccomp_rule: str = SeccompRule.GENERAL_FILE_IO
+
         self._env: list[str] = default_env
         self.memory_limit_check_only = 0  # 是否仅检查内存限制，默认 0 否，1 是
         self.compiled = True  # 是否编译型语言
@@ -134,10 +149,11 @@ class CConfig(BaseLanguageConfig):
     @property
     def seccomp_rule(self) -> str:
         if self.enable_asan:
-            return "c_cpp_asan"
-        return {ProblemIOMode.standard: "c_cpp", ProblemIOMode.file: "c_cpp_file_io"}[
-            self.io_mode
-        ]
+            return SeccompRule.C_CPP_ASAN
+        return {
+            ProblemIOMode.standard: SeccompRule.C_CPP,
+            ProblemIOMode.file: SeccompRule.C_CPP_FILE_IO,
+        }[self.io_mode]
 
     @property
     def env(self) -> list[str]:
