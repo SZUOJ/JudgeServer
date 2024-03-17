@@ -192,11 +192,9 @@ class JavaConfig(BaseLanguageConfig):
         self.max_memory = -1  # 不限制
         self.memory_limit_check_only = 1
         self._seccomp_rule = None
-        self._compile_command = "/usr/bin/javac {src_path} -d {exe_dir} -encoding UTF8"
+        self._compile_command = "/usr/bin/javac {src_path} -d {exe_dir}"
         self._execute_command = (
-            "/usr/bin/java -cp {exe_dir} -XX:MaxRAM={max_memory}k -Djava.security.manager "
-            "-Dfile.encoding=UTF-8 -Djava.security.policy==/etc/java_policy "
-            "-Djava.awt.headless=true Main"
+            "/usr/bin/java -cp {exe_dir} -XX:MaxRAM={max_memory}k Main"
         )
 
 
@@ -213,8 +211,10 @@ class Py3Config(BaseLanguageConfig):
         self.max_real_time = 10000
         self.max_memory = 128 * 1024 * 1024
         self._compile_command = "/usr/bin/python3 -m py_compile {src_path}"
-        self._execute_command = "/usr/bin/python3 {exe_path}"
-        self._env = default_env + ["PYTHONIOENCODING=utf-8"]
+        self._execute_command = (
+            "/usr/bin/python3 -BS {exe_path}"  # -B: 不生成 .pyc 文件, -S: 不导入 site 模块
+        )
+        self._env = default_env
         self.compiled = False
 
 
@@ -244,20 +244,20 @@ class GoConfig(BaseLanguageConfig):
         self.memory_limit_check_only = 1
 
 
-class PHPConfig(BaseLanguageConfig):
-    def __init__(
-        self,
-        options: Optional[OptionType] = None,
-        io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
-    ):
-        super().__init__(options, io_mode)
-        self.src_name = "solution.php"
-        self.exe_name = "solution.php"
-        self._execute_command = "/usr/bin/php {exe_path}"
-        self._env = default_env
-        self.memory_limit_check_only = 1
-        self.compiled = False
-        self._seccomp_rule = None  # 不使用 seccomp
+# class PHPConfig(BaseLanguageConfig):
+#     def __init__(
+#         self,
+#         options: Optional[OptionType] = None,
+#         io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
+#     ):
+#         super().__init__(options, io_mode)
+#         self.src_name = "solution.php"
+#         self.exe_name = "solution.php"
+#         self._execute_command = "/usr/bin/php {exe_path}"
+#         self._env = default_env
+#         self.memory_limit_check_only = 1
+#         self.compiled = False
+#         self._seccomp_rule = None  # 不使用 seccomp
 
 
 class JSConfig(BaseLanguageConfig):
@@ -269,11 +269,12 @@ class JSConfig(BaseLanguageConfig):
         super().__init__(options, io_mode)
         self.src_name = "solution.js"
         self.exe_name = "solution.js"
+        self._compile_command = "/usr/bin/node --check {src_path}"  # 检查语法错误
         self._execute_command = "/usr/bin/node {exe_path}"
         self._env = default_env + ["NO_COLOR=true"]
         self._seccomp_rule = "node"
         self.memory_limit_check_only = 1
-        self.compiled = False
+        self.compiled = True
 
 
 c_lang_spj_compile = {
@@ -312,7 +313,7 @@ lang_map: dict[str, Type[BaseLanguageConfig]] = {
     "java": JavaConfig,
     "py": Py3Config,
     "go": GoConfig,
-    "php": PHPConfig,
+    # "php": PHPConfig,
     "js": JSConfig,
 }
 if __name__ == "__main__":
