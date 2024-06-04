@@ -22,7 +22,7 @@ from config import (
 )
 from exception import JudgeClientError
 from languages import BaseLanguageConfig
-from utils import ProblemIOMode
+from utils import ProblemIOMode, logger
 
 SPJ_WA = 1
 SPJ_AC = 0
@@ -118,6 +118,7 @@ class JudgeClient(object):
         command = shlex.split(command)
         seccomp_rule_name = self._spj_config["seccomp_rule"]
         seccomp_rule_name = None
+        logger.warning("%s\n%s\n%s", in_file_path, user_out_file_path, ans_file_path)
         result = judger.run(
             max_cpu_time=self._max_cpu_time * 3,
             max_real_time=self._max_cpu_time * 9,
