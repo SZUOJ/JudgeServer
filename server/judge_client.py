@@ -117,8 +117,6 @@ class JudgeClient(object):
         )
         command = shlex.split(command)
         seccomp_rule_name = self._spj_config["seccomp_rule"]
-        seccomp_rule_name = None
-        logger.warning("%s\n%s\n%s", in_file_path, user_out_file_path, ans_file_path)
         result = judger.run(
             max_cpu_time=self._max_cpu_time * 3,
             max_real_time=self._max_cpu_time * 9,
@@ -137,6 +135,7 @@ class JudgeClient(object):
             uid=SPJ_USER_UID,
             gid=SPJ_GROUP_GID,
         )
+        logger.warning(f"spj result: {result}")
 
         if result["result"] == judger.RESULT_SUCCESS or (
                 result["result"] == judger.RESULT_RUNTIME_ERROR
