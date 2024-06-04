@@ -27,7 +27,7 @@ from exception import (
     TokenVerificationFailed,
 )
 from judge_client import JudgeClient
-from languages import OptionType, lang_map, cpp_lang_spj_compile, cpp_lang_spj_config, CPPSPJConfig
+from languages import OptionType, lang_map, cpp_lang_spj_compile, cpp_lang_spj_config, CppConfig, CPPSPJConfig
 from utils import ProblemIOMode, logger, server_info, token
 
 app = Flask(__name__)
@@ -258,7 +258,7 @@ class JudgeServer:
         # 语言编译设置用BaseLanguageConfig类型, 不使用字典传参
         try:
             exe_path = Compiler().compile(
-                language_config=CPPSPJConfig,
+                language_config=CPPSPJConfig(),
                 src_path=spj_src_path,
                 output_dir=SPJ_EXE_DIR,
             )
