@@ -198,25 +198,25 @@ class JudgeServer:
 
                     with open(os.path.join(test_case_dir, input_name), "wb") as f:
                         f.write(input_data)
-                    if not is_spj:
-                        output_data: bytes = item["output"].encode("utf-8")
-                        test_output_lf = output_data.replace(b"\r\n", b"\n")  # CRLF格式化
-                        test_output_stripped = re.sub(
-                            pattern=rb"\s", repl=b"", string=test_output_lf
-                        )  # 去除所有空白字符
 
-                        output_name = str(index) + ".out"
-                        item_info["output_name"] = output_name
-                        item_info["output_md5"] = hashlib.md5(
-                            output_data.rstrip()
-                        ).hexdigest()
-                        item_info["output_size"] = len(output_data)
-                        item_info["stripped_output_md5"] = hashlib.md5(
-                            test_output_stripped
-                        ).hexdigest()
+                    output_data: bytes = item["output"].encode("utf-8")
+                    test_output_lf = output_data.replace(b"\r\n", b"\n")  # CRLF格式化
+                    test_output_stripped = re.sub(
+                        pattern=rb"\s", repl=b"", string=test_output_lf
+                    )  # 去除所有空白字符
 
-                        with open(os.path.join(test_case_dir, output_name), "wb") as f:
-                            f.write(output_data)
+                    output_name = str(index) + ".out"
+                    item_info["output_name"] = output_name
+                    item_info["output_md5"] = hashlib.md5(
+                        output_data.rstrip()
+                    ).hexdigest()
+                    item_info["output_size"] = len(output_data)
+                    item_info["stripped_output_md5"] = hashlib.md5(
+                        test_output_stripped
+                    ).hexdigest()
+
+                    with open(os.path.join(test_case_dir, output_name), "wb") as f:
+                        f.write(output_data)
                     info["test_cases"][index] = item_info
                 with open(os.path.join(test_case_dir, "info"), "w") as f:
                     json.dump(info, f)
