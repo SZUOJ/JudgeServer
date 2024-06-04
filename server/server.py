@@ -27,7 +27,7 @@ from exception import (
     TokenVerificationFailed,
 )
 from judge_client import JudgeClient
-from languages import OptionType, lang_map, cpp_lang_spj_compile, cpp_lang_spj_config, CppConfig
+from languages import OptionType, lang_map, cpp_lang_spj_compile, cpp_lang_spj_config, CPPSPJConfig
 from utils import ProblemIOMode, logger, server_info, token
 
 app = Flask(__name__)
@@ -85,8 +85,6 @@ class JudgeServer:
             test_case_id=None,
             test_case=None,
             spj_version=None,
-            spj_config=cpp_lang_spj_config,
-            spj_compile_config=cpp_lang_spj_compile,
             spj_src=None,
             output=False,
             io_mode=None,
@@ -124,6 +122,10 @@ class JudgeServer:
             raise JudgeClientError("invalid parameter")
         # init
         submission_id = uuid.uuid4().hex
+
+        # spj config 暂时写死了
+        spj_config = cpp_lang_spj_config
+        spj_compile_config = cpp_lang_spj_compile
 
         is_spj = spj_version and spj_config
         logger.info("judging submission %s, spj: %s", submission_id, is_spj)
@@ -254,13 +256,9 @@ class JudgeServer:
             os.chmod(spj_src_path, 0o400)
 
         # 语言编译设置用BaseLanguageConfig类型, 不使用字典传参
-        cpp_spj_compile_config = CppConfig()
-        for item in spj_compile_config:
-            setattr(cpp_spj_compile_config, item, spj_compile_config[item])
-
         try:
             exe_path = Compiler().compile(
-                language_config=cpp_spj_compile_config,
+                language_config=CPPSPJConfig,
                 src_path=spj_src_path,
                 output_dir=SPJ_EXE_DIR,
             )

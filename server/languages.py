@@ -61,9 +61,9 @@ class OptionType(TypedDict, total=False):
 
 class BaseLanguageConfig:
     def __init__(
-        self,
-        options: Optional[OptionType] = None,
-        io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
+            self,
+            options: Optional[OptionType] = None,
+            io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
     ):
         self.options = options or {}
         self.src_name = None
@@ -106,9 +106,9 @@ class BaseLanguageConfig:
 
 class CConfig(BaseLanguageConfig):
     def __init__(
-        self,
-        options: Optional[OptionType] = None,
-        io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
+            self,
+            options: Optional[OptionType] = None,
+            io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
     ):
         super().__init__(options, io_mode)
         self.src_name = "main.c"
@@ -164,9 +164,9 @@ class CConfig(BaseLanguageConfig):
 
 class CppConfig(CConfig):
     def __init__(
-        self,
-        options: Optional[OptionType] = None,
-        io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
+            self,
+            options: Optional[OptionType] = None,
+            io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
     ):
         super().__init__(options, io_mode)
         self.src_name = "main.cpp"
@@ -180,9 +180,9 @@ class CppConfig(CConfig):
 
 class JavaConfig(BaseLanguageConfig):
     def __init__(
-        self,
-        options: Optional[OptionType] = None,
-        io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
+            self,
+            options: Optional[OptionType] = None,
+            io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
     ):
         super().__init__(options, io_mode)
         self.src_name = "Main.java"
@@ -200,9 +200,9 @@ class JavaConfig(BaseLanguageConfig):
 
 class Py3Config(BaseLanguageConfig):
     def __init__(
-        self,
-        options: Optional[OptionType] = None,
-        io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
+            self,
+            options: Optional[OptionType] = None,
+            io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
     ):
         super().__init__(options, io_mode)
         self.src_name = "main.py"
@@ -220,9 +220,9 @@ class Py3Config(BaseLanguageConfig):
 
 class GoConfig(BaseLanguageConfig):
     def __init__(
-        self,
-        options: Optional[OptionType] = None,
-        io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
+            self,
+            options: Optional[OptionType] = None,
+            io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
     ):
         super().__init__(options, io_mode)
         self.src_name = "main.go"
@@ -262,9 +262,9 @@ class GoConfig(BaseLanguageConfig):
 
 class JSConfig(BaseLanguageConfig):
     def __init__(
-        self,
-        options: Optional[OptionType] = None,
-        io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
+            self,
+            options: Optional[OptionType] = None,
+            io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
     ):
         super().__init__(options, io_mode)
         self.src_name = "solution.js"
@@ -275,6 +275,21 @@ class JSConfig(BaseLanguageConfig):
         self._seccomp_rule = "node"
         self.memory_limit_check_only = 1
         self.compiled = True
+
+
+class CPPSPJConfig(BaseLanguageConfig):
+    def __init__(
+            self,
+            options: Optional[OptionType] = None,
+            io_mode: Optional[Literal["stdio", "file"]] = ProblemIOMode.standard,
+    ):
+        super().__init__(options, io_mode)
+        self.src_name = "spj-{spj_version}.cpp"
+        self.exe_name = "spj-{spj_version}"
+        self.max_cpu_time = 10000
+        self.max_real_time = 20000
+        self.max_memory = 1024 * 1024 * 1024
+        self._compile_command = "/usr/bin/g++ -DONLINE_JUDGE -O2 -w -fmax-errors=3 -std=c++14 {src_path} -lm -o {exe_path}",
 
 
 c_lang_spj_compile = {
