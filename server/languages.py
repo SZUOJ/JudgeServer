@@ -318,8 +318,8 @@ cpp_lang_spj_compile = {
 
 cpp_lang_spj_config = {
     "exe_name": "spj-{spj_version}",
-    "command": "{exe_path} {in_file_path} {user_out_file_path}",
-    "seccomp_rule": "c_cpp",
+    "command": "{exe_path} {in_file_path} {user_out_file_path} {ans_file_path}",
+    "seccomp_rule": "c_cpp_file_io",
 }
 
 lang_map: dict[str, Type[BaseLanguageConfig]] = {
