@@ -117,6 +117,7 @@ class JudgeClient(object):
         )
         command = shlex.split(command)
         seccomp_rule_name = self._spj_config["seccomp_rule"]
+        seccomp_rule_name = None
         result = judger.run(
             max_cpu_time=self._max_cpu_time * 3,
             max_real_time=self._max_cpu_time * 9,
