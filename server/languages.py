@@ -289,7 +289,7 @@ class CPPSPJConfig(BaseLanguageConfig):
         self.max_cpu_time = 10000
         self.max_real_time = 20000
         self.max_memory = 1024 * 1024 * 1024
-        self._compile_command = "/usr/bin/g++ -DONLINE_JUDGE -O2 -w -fmax-errors=3 -std=c++14 {src_path} -lm -o {exe_path}",
+        self._compile_command = "/usr/bin/g++ -DONLINE_JUDGE -O2 -w -fmax-errors=3 -std=c++14 {src_path} -lm -o {exe_path}"
 
 
 c_lang_spj_compile = {
