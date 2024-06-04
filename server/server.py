@@ -27,7 +27,7 @@ from exception import (
     TokenVerificationFailed,
 )
 from judge_client import JudgeClient
-from languages import OptionType, lang_map, cpp_lang_spj_compile, cpp_lang_spj_config
+from languages import OptionType, lang_map, cpp_lang_spj_compile, cpp_lang_spj_config, CppConfig
 from utils import ProblemIOMode, logger, server_info, token
 
 app = Flask(__name__)
@@ -134,7 +134,8 @@ class JudgeServer:
             )
             # spj src has not been compiled
             if not os.path.isfile(spj_exe_path):
-                logger.warning("%s does not exists, spj src will be recompiled".format(spj_exe_path))
+                logger.warning("%s does not exists, spj src will be recompiled", spj_exe_path)
+                logger.warning(spj_compile_config)
                 cls.compile_spj(
                     spj_version=spj_version,
                     src=spj_src,
@@ -252,9 +253,14 @@ class JudgeServer:
             os.chown(spj_src_path, COMPILER_USER_UID, 0)
             os.chmod(spj_src_path, 0o400)
 
+        # 语言编译设置用BaseLanguageConfig类型, 不使用字典传参
+        cpp_spj_compile_config = CppConfig()
+        for item in spj_compile_config:
+            setattr(cpp_spj_compile_config, item, spj_compile_config[item])
+
         try:
             exe_path = Compiler().compile(
-                language_config=spj_compile_config,
+                language_config=cpp_spj_compile_config,
                 src_path=spj_src_path,
                 output_dir=SPJ_EXE_DIR,
             )
