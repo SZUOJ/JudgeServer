@@ -27,7 +27,7 @@ from exception import (
     TokenVerificationFailed,
 )
 from judge_client import JudgeClient
-from languages import OptionType, lang_map, cpp_lang_spj_compile, cpp_lang_spj_config, CppConfig, CPPSPJConfig
+from languages import OptionType, lang_map, cpp_lang_spj_compile, cpp_lang_spj_config, CPPSPJConfig
 from utils import ProblemIOMode, logger, server_info, token
 
 app = Flask(__name__)
@@ -239,14 +239,19 @@ class JudgeServer:
 
     @classmethod
     def compile_spj(cls, spj_version, src, spj_compile_config=cpp_lang_spj_compile):
-        spj_compile_config["src_name"] = spj_compile_config["src_name"].format(
-            spj_version=spj_version
-        )
-        spj_compile_config["exe_name"] = spj_compile_config["exe_name"].format(
-            spj_version=spj_version
-        )
+        # 语言编译设置用BaseLanguageConfig类型, 不使用字典传参
+        spj_cfg = CPPSPJConfig()
+        spj_cfg.src_name = spj_compile_config["src_name"].format(spj_version=spj_version)
+        spj_cfg.exe_name = spj_compile_config["exe_name"].format(spj_version=spj_version)
 
-        spj_src_path = os.path.join(SPJ_SRC_DIR, spj_compile_config["src_name"])
+        # spj_compile_config["src_name"] = spj_compile_config["src_name"].format(
+        #     spj_version=spj_version
+        # )
+        # spj_compile_config["exe_name"] = spj_compile_config["exe_name"].format(
+        #     spj_version=spj_version
+        # )
+
+        spj_src_path = os.path.join(SPJ_SRC_DIR, spj_cfg.src_name)
 
         # if spj source code not found, then write it into file
         if not os.path.exists(spj_src_path):
@@ -254,11 +259,9 @@ class JudgeServer:
                 f.write(src)
             os.chown(spj_src_path, COMPILER_USER_UID, 0)
             os.chmod(spj_src_path, 0o400)
-
-        # 语言编译设置用BaseLanguageConfig类型, 不使用字典传参
         try:
             exe_path = Compiler().compile(
-                language_config=CPPSPJConfig(),
+                language_config=spj_cfg,
                 src_path=spj_src_path,
                 output_dir=SPJ_EXE_DIR,
             )
