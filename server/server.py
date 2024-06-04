@@ -27,7 +27,7 @@ from exception import (
     TokenVerificationFailed,
 )
 from judge_client import JudgeClient
-from languages import OptionType, lang_map
+from languages import OptionType, lang_map, cpp_lang_spj_compile, cpp_lang_spj_config
 from utils import ProblemIOMode, logger, server_info, token
 
 app = Flask(__name__)
@@ -76,20 +76,20 @@ class JudgeServer:
 
     @classmethod
     def judge(
-        cls,
-        language,
-        src,
-        max_cpu_time,
-        max_memory,
-        options: Optional[OptionType] = None,
-        test_case_id=None,
-        test_case=None,
-        spj_version=None,
-        spj_config=None,
-        spj_compile_config=None,
-        spj_src=None,
-        output=False,
-        io_mode=None,
+            cls,
+            language,
+            src,
+            max_cpu_time,
+            max_memory,
+            options: Optional[OptionType] = None,
+            test_case_id=None,
+            test_case=None,
+            spj_version=None,
+            spj_config=cpp_lang_spj_config,
+            spj_compile_config=cpp_lang_spj_compile,
+            spj_src=None,
+            output=False,
+            io_mode=None,
     ):
         """
 
@@ -126,6 +126,7 @@ class JudgeServer:
         submission_id = uuid.uuid4().hex
 
         is_spj = spj_version and spj_config
+        logger.info("judging submission %s, spj: %s", submission_id, is_spj)
 
         if is_spj:
             spj_exe_path = os.path.join(
@@ -133,7 +134,7 @@ class JudgeServer:
             )
             # spj src has not been compiled
             if not os.path.isfile(spj_exe_path):
-                logger.warning("%s does not exists, spj src will be recompiled")
+                logger.warning("%s does not exists, spj src will be recompiled".format(spj_exe_path))
                 cls.compile_spj(
                     spj_version=spj_version,
                     src=spj_src,
@@ -142,9 +143,9 @@ class JudgeServer:
 
         init_test_case_dir = bool(test_case)
         with InitSubmissionEnv(
-            JUDGER_WORKSPACE_BASE,
-            submission_id=str(submission_id),
-            init_test_case_dir=init_test_case_dir,
+                JUDGER_WORKSPACE_BASE,
+                submission_id=str(submission_id),
+                init_test_case_dir=init_test_case_dir,
         ) as dirs:
             submission_dir, test_case_dir = dirs
             test_case_dir = test_case_dir or os.path.join(TEST_CASE_DIR, test_case_id)
@@ -234,7 +235,7 @@ class JudgeServer:
             return run_result
 
     @classmethod
-    def compile_spj(cls, spj_version, src, spj_compile_config):
+    def compile_spj(cls, spj_version, src, spj_compile_config=cpp_lang_spj_compile):
         spj_compile_config["src_name"] = spj_compile_config["src_name"].format(
             spj_version=spj_version
         )
@@ -280,11 +281,11 @@ def server(path):
             status = 200
             ret = {"err": None, "data": getattr(JudgeServer, path)(**data)}
         except (
-            CompileError,
-            CompilerRuntimeError,
-            TokenVerificationFailed,
-            SPJCompileError,
-            JudgeClientError,
+                CompileError,
+                CompilerRuntimeError,
+                TokenVerificationFailed,
+                SPJCompileError,
+                JudgeClientError,
         ) as e:
             status = e.status
             logger.exception(e)
