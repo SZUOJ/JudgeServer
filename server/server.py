@@ -128,16 +128,12 @@ class JudgeServer:
         spj_compile_config = cpp_lang_spj_compile
 
         is_spj = spj_version and spj_config
-        logger.info("judging submission %s, spj: %s", submission_id, is_spj)
-
         if is_spj:
             spj_exe_path = os.path.join(
                 SPJ_EXE_DIR, spj_config["exe_name"].format(spj_version=spj_version)
             )
             # spj src has not been compiled
             if not os.path.isfile(spj_exe_path):
-                logger.warning("%s does not exists, spj src will be recompiled", spj_exe_path)
-                logger.warning(spj_compile_config)
                 cls.compile_spj(
                     spj_version=spj_version,
                     src=spj_src,

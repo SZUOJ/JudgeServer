@@ -22,7 +22,7 @@ from config import (
 )
 from exception import JudgeClientError
 from languages import BaseLanguageConfig
-from utils import ProblemIOMode, logger
+from utils import ProblemIOMode
 
 SPJ_WA = 1
 SPJ_AC = 0
@@ -135,7 +135,6 @@ class JudgeClient(object):
             uid=SPJ_USER_UID,
             gid=SPJ_GROUP_GID,
         )
-        logger.warning(f"spj result: {result}")
 
         if result["result"] == judger.RESULT_SUCCESS or (
                 result["result"] == judger.RESULT_RUNTIME_ERROR
