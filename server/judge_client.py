@@ -105,12 +105,12 @@ class JudgeClient(object):
         else:
             return output_md5, judger.RESULT_WRONG_ANSWER
 
-    def _spj(self, in_file_path, user_out_file_path, ans_file_path):
+    def _spj(self, test_case_file_id, in_file_path, user_out_file_path, ans_file_path):
         # 对于spj, 先把测试输入和测试输出拷贝到评测目录下
         # 直接访问测试数据会因为spj用户对测试数据目录没有读权限而Permission Denied
-        tmp_in_file_path = os.path.join(self._submission_dir, "std.in")
-        tmp_ans_file_path = os.path.join(self._submission_dir, "std.out")
-        spj_out_file_path = os.path.join(self._submission_dir, "spj.out")
+        tmp_in_file_path = os.path.join(self._submission_dir, f"std{test_case_file_id}.in")
+        tmp_ans_file_path = os.path.join(self._submission_dir, f"std{test_case_file_id}.out")
+        spj_out_file_path = os.path.join(self._submission_dir, f"spj{test_case_file_id}.out")
         shutil.copyfile(in_file_path, tmp_in_file_path)
         shutil.copyfile(ans_file_path, tmp_ans_file_path)
 
@@ -239,7 +239,8 @@ class JudgeClient(object):
                         raise JudgeClientError("spj_config or spj_version not set")
 
                     spj_result, spj_output = self._spj(
-                        in_file_path=in_file, user_out_file_path=user_output_file, ans_file_path=ans_file
+                        test_case_file_id=test_case_file_id, in_file_path=in_file,
+                        user_out_file_path=user_output_file, ans_file_path=ans_file
                     )
                     run_result["spj_output"] = spj_output
 
