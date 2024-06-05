@@ -108,8 +108,9 @@ class JudgeClient(object):
     def _spj(self, in_file_path, user_out_file_path, ans_file_path):
         # 对于spj, 先把测试输入和测试输出拷贝到评测目录下
         # 直接访问测试数据会因为spj用户对测试数据目录没有读权限而Permission Denied
-        tmp_in_file_path = os.path.join(self._submission_dir, "in")
-        tmp_ans_file_path = os.path.join(self._submission_dir, "ans")
+        tmp_in_file_path = os.path.join(self._submission_dir, "std.in")
+        tmp_ans_file_path = os.path.join(self._submission_dir, "std.out")
+        spj_out_file_path = os.path.join(self._submission_dir, "spj.out")
         shutil.copyfile(in_file_path, tmp_in_file_path)
         shutil.copyfile(ans_file_path, tmp_ans_file_path)
 
@@ -134,8 +135,8 @@ class JudgeClient(object):
             max_process_number=judger.UNLIMITED,
             exe_path=command[0],
             input_path=in_file_path,
-            output_path="/tmp/spj.out",
-            error_path="/tmp/spj.out",
+            output_path=spj_out_file_path,
+            error_path=spj_out_file_path,
             args=command[1::],
             env=["PATH=" + os.environ.get("PATH", "")],
             log_path=JUDGER_RUN_LOG_PATH,
@@ -143,15 +144,25 @@ class JudgeClient(object):
             uid=SPJ_USER_UID,
             gid=SPJ_GROUP_GID,
         )
+        spj_output = None
+
+        try:
+            with open(spj_out_file_path, "rb") as f:
+                temp_output = f.read(MAX_RESP_BYTES).decode(
+                    "utf-8", errors="backslashreplace"
+                )
+                spj_output = re.sub(r"\u0000", "", temp_output)  # 去除\0
+        except Exception:
+            pass
 
         if result["result"] == judger.RESULT_SUCCESS or (
                 result["result"] == judger.RESULT_RUNTIME_ERROR
                 and result["exit_code"] in [SPJ_WA, SPJ_ERROR]
                 and result["signal"] == 0
         ):
-            return result["exit_code"]
+            return result["exit_code"], spj_output
         else:
-            return SPJ_ERROR
+            return SPJ_ERROR, spj_output
 
     def _judge_one(self, test_case_file_id):
         test_case_info = self._get_test_case_file_info(test_case_file_id)
@@ -227,9 +238,10 @@ class JudgeClient(object):
                     if not self._spj_config or not self._spj_version:
                         raise JudgeClientError("spj_config or spj_version not set")
 
-                    spj_result = self._spj(
+                    spj_result, spj_output = self._spj(
                         in_file_path=in_file, user_out_file_path=user_output_file, ans_file_path=ans_file
                     )
+                    run_result["spj_output"] = spj_output
 
                     if spj_result == SPJ_WA:
                         run_result["result"] = judger.RESULT_WRONG_ANSWER
