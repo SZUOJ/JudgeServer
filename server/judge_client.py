@@ -106,14 +106,22 @@ class JudgeClient(object):
             return output_md5, judger.RESULT_WRONG_ANSWER
 
     def _spj(self, in_file_path, user_out_file_path, ans_file_path):
+        # 对于spj, 先把测试输入和测试输出拷贝到评测目录下
+        # 直接访问测试数据会因为spj用户对测试数据目录没有读权限而Permission Denied
+        tmp_in_file_path = os.path.join(self._submission_dir, "in")
+        tmp_ans_file_path = os.path.join(self._submission_dir, "ans")
+        shutil.copyfile(in_file_path, tmp_in_file_path)
+        shutil.copyfile(ans_file_path, tmp_ans_file_path)
+
         os.chown(self._submission_dir, SPJ_USER_UID, 0)
         os.chown(user_out_file_path, SPJ_USER_UID, 0)
         os.chmod(user_out_file_path, 0o740)
+
         command = self._spj_config["command"].format(
             exe_path=self._spj_exe,
-            in_file_path=in_file_path,
+            in_file_path=tmp_in_file_path,
             user_out_file_path=user_out_file_path,
-            ans_file_path=ans_file_path
+            ans_file_path=tmp_ans_file_path
         )
         command = shlex.split(command)
         seccomp_rule_name = self._spj_config["seccomp_rule"]
@@ -259,13 +267,5 @@ class JudgeClient(object):
             pool.close()
             pool.join()
         for item in tmp_result:
-            # exception will be raised, when get() is called
-            # # http://stackoverflow.com/questions/22094852/how-to-catch-exceptions-in-workers-in-multiprocessing
             result.append(item.get())
         return result
-
-    # def __getstate__(self):
-    #     # http://stackoverflow.com/questions/25382455/python-notimplementederror-pool-objects-cannot-be-passed-between-processes
-    #     self_dict = self.__dict__.copy()
-    #     del self_dict["_pool"]
-    #     return self_dict
