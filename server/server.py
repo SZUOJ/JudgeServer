@@ -82,6 +82,7 @@ class JudgeServer:
             max_cpu_time,
             max_memory,
             options: Optional[OptionType] = None,
+            include_sample=True,
             test_case_id=None,
             test_case=None,
             spj_version=None,
@@ -103,6 +104,7 @@ class JudgeServer:
         :param spj_compile_config:
         :param spj_src:
         :param output:
+        :param include_sample: 评测是否包含样例
         :param io_mode: {'io_mode': ...(, 'input': ..., 'output': ...)}
         :return:
         """
@@ -140,6 +142,8 @@ class JudgeServer:
                     spj_compile_config=spj_compile_config,
                 )
 
+
+        # 目前都是后端生成测试用例, 无需判题端生成
         init_test_case_dir = bool(test_case)
         with InitSubmissionEnv(
                 JUDGER_WORKSPACE_BASE,
@@ -228,6 +232,7 @@ class JudgeServer:
                 spj_config=spj_config,
                 output=output,
                 io_mode=io_mode,
+                include_sample=include_sample,
             )
             run_result = judge_client.run()
 

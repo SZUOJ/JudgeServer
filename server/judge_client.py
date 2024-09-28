@@ -42,9 +42,11 @@ class JudgeClient(object):
             max_memory,
             test_case_dir,
             submission_dir,
+
             spj_version,
             spj_config,
             io_mode,
+            include_sample=True,
             output=False,
     ):
         self._language_config = language_config
@@ -61,6 +63,7 @@ class JudgeClient(object):
         self._spj_config = spj_config
         self._output = output
         self._io_mode = io_mode
+        self._include_sample = include_sample
 
         if self._spj_version and self._spj_config:
             self._spj_exe = os.path.join(
@@ -168,6 +171,7 @@ class JudgeClient(object):
         test_case_info = self._get_test_case_file_info(test_case_file_id)
         in_file = os.path.join(self._test_case_dir, test_case_info["input_name"])
         ans_file = os.path.join(self._test_case_dir, test_case_info["output_name"])
+        is_sample = test_case_info["is_sample"]
 
         if self._io_mode["io_mode"] == ProblemIOMode.file:
             user_output_dir = os.path.join(self._submission_dir, str(test_case_file_id))
@@ -230,6 +234,7 @@ class JudgeClient(object):
         # if progress exited normally, then we should check output result
         run_result["output_md5"] = None
         run_result["output"] = None
+        run_result["is_sample"] = is_sample
         if run_result["result"] == judger.RESULT_SUCCESS:
             if not os.path.exists(user_output_file):
                 run_result["result"] = judger.RESULT_WRONG_ANSWER
@@ -272,7 +277,9 @@ class JudgeClient(object):
         result = []
         pool = Pool(processes=psutil.cpu_count())
         try:
-            for test_case_file_id, _ in self._test_case_info["test_cases"].items():
+            for test_case_file_id, case_info in self._test_case_info["test_cases"].items():
+                if not self._include_sample and case_info["is_sample"]:
+                    continue
                 tmp_result.append(pool.apply_async(_run, (self, test_case_file_id)))
         except Exception as e:
             raise e
