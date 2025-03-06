@@ -6,7 +6,7 @@ import socket
 import judger
 import psutil
 
-from config import SERVER_LOG_PATH
+from config import DEBUG, SERVER_LOG_PATH
 from exception import JudgeClientError
 
 logger = logging.getLogger(__name__)
@@ -14,7 +14,10 @@ handler = logging.handlers.RotatingFileHandler(SERVER_LOG_PATH, maxBytes=10 * 10
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
-logger.setLevel(logging.WARNING)
+if DEBUG:
+    logger.setLevel(logging.DEBUG)
+else:
+    logger.setLevel(logging.WARNING)
 
 
 def server_info():
