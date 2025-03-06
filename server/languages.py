@@ -235,8 +235,8 @@ class GoConfig(BaseLanguageConfig):
         self._seccomp_rule = "golang"
         # 降低内存占用
         self._env = default_env + [
-            "GODEBUG=madvdontneed=1",
-            "GOMAXPROCS=1",
+            # "GODEBUG=madvdontneed=1",
+            # "GOMAXPROCS=1",
             "GOCACHE=/tmp",
             "GOPATH=/tmp/go",
         ]
