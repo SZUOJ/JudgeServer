@@ -119,6 +119,7 @@ g++ --version
 python3 --version
 java -version
 node --version
+go version
 EOS
 
 HEALTHCHECK --interval=5s CMD [ "/app/.venv/bin/python3", "/app/service.py" ]
