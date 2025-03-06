@@ -120,6 +120,7 @@ python3 --version
 java -version
 node --version
 go version
+go telemetry off
 EOS
 
 HEALTHCHECK --interval=5s CMD [ "/app/.venv/bin/python3", "/app/service.py" ]
