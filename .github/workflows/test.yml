@@ -13,15 +13,18 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Inject slug/short variables
+        uses: rlespinasse/github-slug-action@v4
+
       # 8位commit id
-      - uses: benjlevesque/short-sha@v1.2
+      - uses: benjlevesque/short-sha@v2.1
         id: short-sha
         with:
           length: 8
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
 
       - name: Docker Login
         uses: docker/login-action@v2
@@ -34,7 +37,7 @@ jobs:
         id: docker_build
         uses: docker/build-push-action@v3
         env:
-          OJ_JUDGER_VERSION: ${{ github.ref_name }}-${{ steps.short-sha.outputs.sha }}
+          OJ_JUDGER_VERSION: ${{ env.GITHUB_REF_SLUG }}-${{ steps.short-sha.outputs.sha }}
         with:
           context: ./
           push: true
