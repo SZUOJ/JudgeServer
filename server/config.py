@@ -2,6 +2,8 @@ import grp
 import os
 import pwd
 
+DEBUG = os.environ.get("judger_debug") == "1"
+
 JUDGER_WORKSPACE_BASE = "/judger/run"
 LOG_BASE = "/log"
 
