@@ -41,7 +41,7 @@ jobs:
           build-args: |
             OJ_JUDGER_VERSION=${{ env.OJ_BE_VERSION }}
           tags: |
-            registry.cn-shenzhen.aliyuncs.com/szuoj/judge_server:${{ github.ref_name }}
+            registry.cn-shenzhen.aliyuncs.com/szuoj/judge_server:${{ env.GITHUB_REF_SLUG }}
             registry.cn-shenzhen.aliyuncs.com/szuoj/judge_server:${{ env.OJ_JUDGER_VERSION }}
           # https://github.com/docker/build-push-action/blob/master/docs/advanced/cache.md
           cache-from: type=gha
