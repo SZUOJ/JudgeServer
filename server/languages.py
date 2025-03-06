@@ -227,8 +227,8 @@ class GoConfig(BaseLanguageConfig):
         super().__init__(options, io_mode)
         self.src_name = "main.go"
         self.exe_name = "main"
-        self.max_cpu_time = 3000
-        self.max_real_time = 5000
+        self.max_cpu_time = 10000
+        self.max_real_time = 20000
         self.max_memory = 1024 * 1024 * 1024
         self._compile_command = "/usr/bin/go build -o {exe_path} {src_path}"
         self._execute_command = "{exe_path}"
