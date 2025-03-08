@@ -227,15 +227,13 @@ class GoConfig(BaseLanguageConfig):
         super().__init__(options, io_mode)
         self.src_name = "main.go"
         self.exe_name = "main"
-        self.max_cpu_time = 3000
-        self.max_real_time = 5000
+        self.max_cpu_time = 15000
+        self.max_real_time = 20000
         self.max_memory = 1024 * 1024 * 1024
         self._compile_command = "/usr/bin/go build -o {exe_path} {src_path}"
         self._execute_command = "{exe_path}"
         self._seccomp_rule = "golang"
-        # 降低内存占用
         self._env = default_env + [
-            "GODEBUG=madvdontneed=1",
             "GOMAXPROCS=1",
             "GOCACHE=/tmp",
             "GOPATH=/tmp/go",

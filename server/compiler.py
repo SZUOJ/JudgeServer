@@ -4,10 +4,10 @@ import shlex
 
 import judger
 
-from config import COMPILER_GROUP_GID, COMPILER_LOG_PATH, COMPILER_USER_UID
+from config import DEBUG, COMPILER_GROUP_GID, COMPILER_LOG_PATH, COMPILER_USER_UID
 from exception import CompileError, CompilerRuntimeError
 from languages import BaseLanguageConfig
-
+from utils import logger
 
 class Compiler(object):
     def compile(self, language_config: BaseLanguageConfig, src_path, output_dir):
@@ -22,6 +22,8 @@ class Compiler(object):
         os.chdir(output_dir)
         env = language_config.env
         env.append("PATH=" + os.getenv("PATH"))
+        if DEBUG:
+            logger.debug(f"Compile command: {command}, src_path: {src_path}, output_dir: {output_dir}")
         result = judger.run(
             max_cpu_time=language_config.max_cpu_time,
             max_real_time=language_config.max_real_time,
@@ -41,7 +43,8 @@ class Compiler(object):
             uid=COMPILER_USER_UID,
             gid=COMPILER_GROUP_GID,
         )
-
+        if DEBUG:
+            logger.debug(str(result))
         if result["result"] != judger.RESULT_SUCCESS:
             if os.path.exists(compiler_out):
                 with open(compiler_out, encoding="utf-8") as f:

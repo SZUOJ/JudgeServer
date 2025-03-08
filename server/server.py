@@ -4,12 +4,12 @@ import os
 import re
 import shutil
 import uuid
-from typing import Optional
-
 from flask import Flask, Response, request
+from typing import Optional
 
 from compiler import Compiler
 from config import (
+    DEBUG,
     COMPILER_USER_UID,
     JUDGER_WORKSPACE_BASE,
     RUN_GROUP_GID,
@@ -31,7 +31,6 @@ from languages import OptionType, lang_map, cpp_lang_spj_compile, cpp_lang_spj_c
 from utils import ProblemIOMode, logger, server_info, token
 
 app = Flask(__name__)
-DEBUG = os.environ.get("judger_debug") == "1"
 app.debug = DEBUG
 
 
@@ -141,7 +140,6 @@ class JudgeServer:
                     src=spj_src,
                     spj_compile_config=spj_compile_config,
                 )
-
 
         # 目前都是后端生成测试用例, 无需判题端生成
         init_test_case_dir = bool(test_case)
