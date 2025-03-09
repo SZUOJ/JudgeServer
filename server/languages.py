@@ -215,7 +215,7 @@ class Py3Config(BaseLanguageConfig):
             "/usr/bin/python3 -BS {exe_path}"  # -B: 不生成 .pyc 文件, -S: 不导入 site 模块
         )
         self._env = default_env
-        self.compiled = False
+        self.compiled = True
 
 
 class GoConfig(BaseLanguageConfig):
