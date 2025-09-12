@@ -48,10 +48,10 @@ rm -f /etc/apt/apt.conf.d/docker-clean
 echo 'Binary::apt::APT::Keep-Downloaded-Packages "1";' > /etc/apt/apt.conf.d/keep-cache
 echo 'APT::Install-Recommends "0";' > /etc/apt/apt.conf.d/no-recommends
 echo 'APT::AutoRemove::RecommendsImportant "0";' >> /etc/apt/apt.conf.d/no-recommends
-needed="python3.12-minimal \
-    python3.12-venv \
-    libpython3.12-stdlib \
-    libpython3.12-dev \
+needed="python3.13-minimal \
+    python3.13-venv \
+    libpython3.13-stdlib \
+    libpython3.13-dev \
     golang-1.24-go \
     temurin-21-jdk \
     gcc-13 \
