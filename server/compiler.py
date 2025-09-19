@@ -9,6 +9,7 @@ from exception import CompileError, CompilerRuntimeError
 from languages import BaseLanguageConfig
 from utils import logger
 
+
 class Compiler(object):
     def compile(self, language_config: BaseLanguageConfig, src_path, output_dir):
         command = language_config.compile_command
@@ -20,8 +21,7 @@ class Compiler(object):
         _command = shlex.split(command)
 
         os.chdir(output_dir)
-        env = language_config.env
-        env.append("PATH=" + os.getenv("PATH"))
+        env = language_config.env + ["PATH=" + os.getenv("PATH")]
         if DEBUG:
             logger.debug(f"Compile command: {command}, src_path: {src_path}, output_dir: {output_dir}")
         result = judger.run(
