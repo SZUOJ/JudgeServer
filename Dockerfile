@@ -111,6 +111,9 @@ gcc -shared -fPIC -o unbuffer.so unbuffer.c
 useradd -u 901 -r -s /sbin/nologin -M compiler
 useradd -u 902 -r -s /sbin/nologin -M code
 useradd -u 903 -r -s /sbin/nologin -M -G code spj
+# 最小化运行时可读的系统文件，防止提交程序读取宿主敏感信息
+# root 用户仍可读取，保证判题服务自身初始化逻辑不受影响
+chmod 640 /etc/passwd /etc/group /etc/hosts
 mkdir -p /usr/lib/judger
 EOS
 
