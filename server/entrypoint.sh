@@ -10,6 +10,13 @@ chmod 711 /judger/run
 chown compiler:spj /judger/spj
 chmod 710 /judger/spj
 
+touch /log/judge_server.log /log/gunicorn.log /log/compile.log
+chown root:root /log /log/judge_server.log /log/gunicorn.log
+chmod 711 /log
+chmod 600 /log/judge_server.log /log/gunicorn.log
+
+chown compiler:code /log/compile.log
+chmod 600 /log/compile.log
 
 
 if [ -z "$MAX_WORKER_NUM" ]; then
