@@ -103,7 +103,9 @@ EOS
 COPY server/ /app/
 RUN <<EOS
 set -ex
-chmod -R u=rwX,go=rX /app/
+# 让沙箱运行用户无法读取 judge_server 服务源码，避免 file 模式下通过 open/read 泄露
+chown -R root:root /app/
+chmod -R u=rwX,go= /app/
 chmod +x /app/entrypoint.sh
 gcc -shared -fPIC -o unbuffer.so unbuffer.c
 useradd -u 901 -r -s /sbin/nologin -M compiler
