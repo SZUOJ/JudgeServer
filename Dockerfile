@@ -27,7 +27,7 @@ EOS
 
 RUN <<EOS
 set -ex
-cd bindings/Python
+cd bindings
 python3 -m venv .venv
 .venv/bin/pip3 install build
 .venv/bin/python3 -m build -w
@@ -91,7 +91,7 @@ apt-get purge -y --auto-remove
 EOS
 
 COPY --from=builder --chmod=755 --link /app/output/libjudger.so /usr/lib/judger/libjudger.so
-COPY --from=builder /app/bindings/Python/dist/ /app/
+COPY --from=builder /app/bindings/dist/ /app/
 RUN --mount=type=cache,target=/root/.cache/pip,id=pip-cahce-$TARGETARCH$TARGETVARIANT-final \
     <<EOS
 set -ex
