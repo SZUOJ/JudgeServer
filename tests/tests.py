@@ -7,8 +7,7 @@ import json
 import unittest
 import requests
 
-
-from client.Python.client import JudgeServerClient, JudgeServerClientError
+from client.app import JudgeServerClient, JudgeServerClientError
 
 
 class JudgeServerClientForTokenHeaderTest(JudgeServerClient):
