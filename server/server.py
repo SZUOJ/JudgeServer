@@ -79,6 +79,7 @@ class JudgeServer:
             language,
             src,
             max_cpu_time,
+            max_real_time,
             max_memory,
             options: Optional[OptionType] = None,
             include_sample=True,
@@ -95,6 +96,7 @@ class JudgeServer:
         :param src: 要运行的代码
         :param options: {'version': ..., 'io_mode': ..., 'enable_asan': ..., 'enable_lsan': ...}
         :param max_cpu_time:
+        :param max_real_time:
         :param max_memory:
         :param test_case_id:
         :param test_case:
@@ -223,6 +225,7 @@ class JudgeServer:
                 language_config=language_config,
                 exe_path=exe_path,
                 max_cpu_time=max_cpu_time,
+                max_real_time=max_real_time,
                 max_memory=max_memory,
                 test_case_dir=test_case_dir,
                 submission_dir=submission_dir,

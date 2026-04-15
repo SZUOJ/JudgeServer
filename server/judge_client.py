@@ -39,6 +39,7 @@ class JudgeClient(object):
             language_config: BaseLanguageConfig,
             exe_path,
             max_cpu_time,
+            max_real_time,
             max_memory,
             test_case_dir,
             submission_dir,
@@ -53,7 +54,7 @@ class JudgeClient(object):
         self._exe_path = exe_path
         self._max_cpu_time = max_cpu_time
         self._max_memory = max_memory
-        self._max_real_time = self._max_cpu_time * 3
+        self._max_real_time = self.max_real_time
         self._test_case_dir = test_case_dir
         self._submission_dir = submission_dir
 
