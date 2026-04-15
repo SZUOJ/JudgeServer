@@ -298,10 +298,12 @@ def server(path):
         ) as e:
             status = e.status
             logger.exception(e)
+            logger.exception(data)
             ret = {"err": e.__class__.__name__, "data": e.message}
         except Exception as e:
             status = 500
             logger.exception(e)
+            logger.exception(data)
             ret = {
                 "err": "JudgeClientError",
                 "data": e.__class__.__name__ + " :" + str(e),
